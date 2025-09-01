@@ -27,9 +27,49 @@ static inline int64_t gettime(){
 
 #endif
 
+static inline uint64_t sign_extend(uint64_t src,int src_bits){
+    uint64_t sign = src >> (src_bits - 1) & 0x1;
+    uint64_t mask = (~sign + 1) << (src_bits - 1);
+
+    src |= mask;
+    return src;
+}
+
+static inline uint64_t zero_extend(uint64_t src,int src_bits){
+    uint64_t mask = (1ULL << src_bits) -1;
+
+    src &= mask;
+    return src;
+}
+
+#define object_of(mp,type,member) ((type*)((char*)mp - offsetof(type,member)))
+
+#define XCHG(x,y)\
+    do{\
+        typeof(x) tmp = x;\
+        x = y;\
+        y = tmp;\
+    }while(0)
+
+#ifdef DEBUG
+#define logd(fmt,...) printf("%s(),%d,"fmt,__func__,__LINE__,##__VA_ARGS__)
+#else
+#define logd(fmt,...)
+#endif
 
 
+#define logi(fmt,...) printf("%s(),%d,info:"fmt,__func__,__LINE__,##__VA_ARGS__)
 
+#define loge(fmt, ...) printf("%s(), %d, \033[1;31m error:\033[0m "fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define logw(fmt, ...) printf("%s(), %d, \033[1;33m warning:\033[0m "fmt, __func__, __LINE__, ##__VA_ARGS__)
+
+#define CHECK_ERROR(cond, ret, fmt, ...) \
+	do { \
+		if (cond) { \
+			printf("%s(), %d, \033[1;31m error:\033[0m "fmt, __func__, __LINE__, ##__VA_ARGS__); \
+			return ret; \
+		} \
+	} while (0)
 
 
 #endif
