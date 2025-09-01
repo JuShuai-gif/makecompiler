@@ -478,145 +478,133 @@ int rbtree_delete(rbtree_t *tree, rbtree_node_t *z) {
     return 0;
 }
 
-rbtree_node_t* rbtree_find(rbtree_t* tree,void* data,rbtree_node_do_pt cmp){
+rbtree_node_t *rbtree_find(rbtree_t *tree, void *data, rbtree_node_do_pt cmp) {
     if (!tree || !cmp) {
         return NULL;
     }
 
-    rbtree_node_t* node = tree->root;
+    rbtree_node_t *node = tree->root;
 
     logd("root: %p, sentinel: %p\n", tree->root, &tree->sentinel);
 
     while (&tree->sentinel != node) {
-        int ret = cmp(node,data);
+        int ret = cmp(node, data);
 
         if (ret < 0) {
             node = node->right;
-        }else if (ret > 0) {
+        } else if (ret > 0) {
             node = node->left;
-        }else {
+        } else {
             return node;
         }
     }
     return NULL;
 }
 
+int scf_rbtree_foreach(scf_rbtree_t *tree, scf_rbtree_node_t *root, void *data, scf_rbtree_node_do_pt done) {
+    if (!tree || !root || !done)
+        return -EINVAL;
 
+    if (&tree->sentinel == root)
+        return 0;
 
+    int ret;
 
-int scf_rbtree_foreach(scf_rbtree_t* tree, scf_rbtree_node_t* root, void* data, scf_rbtree_node_do_pt done)
-{
-	if (!tree || !root || !done)
-		return -EINVAL;
+    if (&tree->sentinel != root->left) {
+        ret = scf_rbtree_foreach(tree, root->left, data, done);
+        if (ret < 0) {
+            scf_loge("\n");
+            return ret;
+        }
+    }
 
-	if (&tree->sentinel == root)
-		return 0;
+    ret = done(root, data);
+    if (ret < 0) {
+        scf_loge("\n");
+        return ret;
+    }
 
-	int ret;
-
-	if (&tree->sentinel != root->left) {
-
-		ret = scf_rbtree_foreach(tree, root->left, data, done);
-		if (ret < 0) {
-			scf_loge("\n");
-			return ret;
-		}
-	}
-
-	ret = done(root, data);
-	if (ret < 0) {
-		scf_loge("\n");
-		return ret;
-	}
-
-	if (&tree->sentinel != root->right) {
-
-		ret = scf_rbtree_foreach(tree, root->right, data, done);
-		if (ret < 0) {
-			scf_loge("\n");
-			return ret;
-		}
-	}
-	return 0;
+    if (&tree->sentinel != root->right) {
+        ret = scf_rbtree_foreach(tree, root->right, data, done);
+        if (ret < 0) {
+            scf_loge("\n");
+            return ret;
+        }
+    }
+    return 0;
 }
 
-int scf_rbtree_foreach_reverse(scf_rbtree_t* tree, scf_rbtree_node_t* root, void* data, scf_rbtree_node_do_pt done)
-{
-	if (!tree || !root || !done)
-		return -EINVAL;
+int scf_rbtree_foreach_reverse(scf_rbtree_t *tree, scf_rbtree_node_t *root, void *data, scf_rbtree_node_do_pt done) {
+    if (!tree || !root || !done)
+        return -EINVAL;
 
-	if (&tree->sentinel == root)
-		return 0;
+    if (&tree->sentinel == root)
+        return 0;
 
-	int ret;
+    int ret;
 
-	if (&tree->sentinel != root->right) {
+    if (&tree->sentinel != root->right) {
+        ret = scf_rbtree_foreach_reverse(tree, root->right, data, done);
+        if (ret < 0) {
+            scf_loge("\n");
+            return ret;
+        }
+    }
 
-		ret = scf_rbtree_foreach_reverse(tree, root->right, data, done);
-		if (ret < 0) {
-			scf_loge("\n");
-			return ret;
-		}
-	}
+    ret = done(root, data);
+    if (ret < 0) {
+        scf_loge("\n");
+        return ret;
+    }
 
-	ret = done(root, data);
-	if (ret < 0) {
-		scf_loge("\n");
-		return ret;
-	}
-
-	if (&tree->sentinel != root->left) {
-
-		ret = scf_rbtree_foreach_reverse(tree, root->left, data, done);
-		if (ret < 0) {
-			scf_loge("\n");
-			return ret;
-		}
-	}
-	return 0;
+    if (&tree->sentinel != root->left) {
+        ret = scf_rbtree_foreach_reverse(tree, root->left, data, done);
+        if (ret < 0) {
+            scf_loge("\n");
+            return ret;
+        }
+    }
+    return 0;
 }
 
-int scf_rbtree_depth(scf_rbtree_t* tree, scf_rbtree_node_t* root)
-{
-	if (!tree || !root)
-		return -EINVAL;
+int scf_rbtree_depth(scf_rbtree_t *tree, scf_rbtree_node_t *root) {
+    if (!tree || !root)
+        return -EINVAL;
 
-	if (&tree->sentinel == root)
-		return 0;
+    if (&tree->sentinel == root)
+        return 0;
 
-	int ret;
+    int ret;
 
-	if (root == tree->root) {
-		root->depth  = 1;
-		root->bdepth = 1;
-	} else if (SCF_RBTREE_BLACK == root->color) {
-		root->bdepth = root->parent->bdepth + 1;
-		root->depth  = root->parent->depth  + 1;
-	} else {
-		root->bdepth = root->parent->bdepth;
-		root->depth  = root->parent->depth  + 1;
-	}
+    if (root == tree->root) {
+        root->depth = 1;
+        root->bdepth = 1;
+    } else if (SCF_RBTREE_BLACK == root->color) {
+        root->bdepth = root->parent->bdepth + 1;
+        root->depth = root->parent->depth + 1;
+    } else {
+        root->bdepth = root->parent->bdepth;
+        root->depth = root->parent->depth + 1;
+    }
 
-	scf_loge("root->depth: %d, root->bdepth: %d\n", root->depth, root->bdepth);
+    scf_loge("root->depth: %d, root->bdepth: %d\n", root->depth, root->bdepth);
 
-	if (&tree->sentinel != root->left) {
+    if (&tree->sentinel != root->left) {
+        ret = scf_rbtree_depth(tree, root->left);
+        if (ret < 0) {
+            scf_loge("\n");
+            return ret;
+        }
+    }
 
-		ret = scf_rbtree_depth(tree, root->left);
-		if (ret < 0) {
-			scf_loge("\n");
-			return ret;
-		}
-	}
-
-	if (&tree->sentinel != root->right) {
-
-		ret = scf_rbtree_depth(tree, root->right);
-		if (ret < 0) {
-			scf_loge("\n");
-			return ret;
-		}
-	}
-	return 0;
+    if (&tree->sentinel != root->right) {
+        ret = scf_rbtree_depth(tree, root->right);
+        if (ret < 0) {
+            scf_loge("\n");
+            return ret;
+        }
+    }
+    return 0;
 }
 
 #if 0
