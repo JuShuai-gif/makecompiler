@@ -1,7 +1,12 @@
-#ifndef SCF_LEX_WORD_H
-#define SCF_LEX_WORD_H
+#ifndef LEX_WORD_H
+#define LEX_WORD_H
 
-#include <cstdint>
+#include <stdint.h>
+
+#include "utils_string.h"
+#include "utils_list.h"
+
+
 typedef struct lex_word_s lex_word_t;
 typedef struct complex_s complex_t;
 typedef struct macro_s macro_t;

@@ -45,7 +45,7 @@ static inline vector_t* vector_clone(vector_t* src){
 
     dst->capacity = src->capacity;
     dst->size = src->size;
-    memccpy(dst->data,src->data,src->size * sizeof(void*));
+    memcpy(dst->data,src->data,src->size * sizeof(void*));
     return dst;
 }
 

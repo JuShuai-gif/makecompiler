@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "utils_def.h": "c"
+        "utils_def.h": "c",
+        "utils_list.h": "c",
+        "utils_string.h": "c",
+        "lex.h": "c",
+        "utils_vector.h": "c",
+        "lex_word.h": "c"
     }
 }

@@ -103,12 +103,19 @@ int string_cmp(const string_t* s0,const string_t* s1){
     return strncmp(s0->data,s1->data,s0->len);
 }
 
-int string_cmp_cstr(const string_t* s0,const char* str,size_t len){
-    string_t s1;
-    s1.capacity = -1;
-    s1.len = len;
-    s1.data = (char*)str;
-    return string_cmp(s0,&s1);
+int	string_cmp_cstr(const string_t* s0, const char* str)
+{
+	return string_cmp_cstr_len(s0, str, strlen(str));
+}
+
+int	string_cmp_cstr_len(const string_t* s0, const char* str, size_t len)
+{
+	string_t s1;
+	s1.capacity	= -1;
+	s1.len		= len;
+	s1.data		= (char*)str;
+
+	return string_cmp(s0, &s1);
 }
 
 int string_copy(string_t* s0,const string_t* s1){
@@ -249,7 +256,7 @@ static int _match_kmp(const uint8_t* T,int Tlen,const uint8_t* P,int Plen,vector
         {
             logd("KMP find P: %s in T:%s,offset: %d\n",P,T,i-m+1);
 
-            int ret = scf_vector_add(offsets, (void*)(intptr_t)(i - m + 1));
+            int ret = vector_add(offsets, (void*)(intptr_t)(i - m + 1));
 
             if (ret < 0)
                 return ret;
@@ -273,7 +280,7 @@ int string_match_kmp(const string_t* T,const string_t* P,vector_t* offsets){
 }
 
 
-int scf_string_match_kmp_cstr(const uint8_t* T, const uint8_t* P, scf_vector_t* offsets)
+int string_match_kmp_cstr(const uint8_t* T, const uint8_t* P, vector_t* offsets)
 {
 	if (!T || !P || !offsets)
 		return -EINVAL;
@@ -281,7 +288,7 @@ int scf_string_match_kmp_cstr(const uint8_t* T, const uint8_t* P, scf_vector_t* 
 	return _match_kmp(T, strlen(T), P, strlen(P), offsets);
 }
 
-int scf_string_match_kmp_cstr_len(const scf_string_t* T, const uint8_t* P, size_t Plen, scf_vector_t* offsets)
+int string_match_kmp_cstr_len(const string_t* T, const uint8_t* P, size_t Plen, vector_t* offsets)
 {
 	if (!T || !P || 0 == Plen || !offsets)
 		return -EINVAL;
@@ -289,66 +296,66 @@ int scf_string_match_kmp_cstr_len(const scf_string_t* T, const uint8_t* P, size_
 	return _match_kmp(T->data, T->len, P, Plen, offsets);
 }
 
-int scf_string_get_offset(scf_string_t* str, const char* data, size_t len)
+int string_get_offset(string_t* str, const char* data, size_t len)
 {
 	int ret;
 
 	if (0 == str->len) {
-		if (scf_string_cat_cstr_len(str, data, len) < 0)
+		if (string_cat_cstr_len(str, data, len) < 0)
 			return -1;
 		return 0;
 	}
 
-	scf_vector_t* vec = scf_vector_alloc();
+	vector_t* vec = vector_alloc();
 	if (!vec)
 		return -ENOMEM;
 
-	ret = scf_string_match_kmp_cstr_len(str, data, len, vec);
+	ret = string_match_kmp_cstr_len(str, data, len, vec);
 	if (ret < 0) {
 
 	} else if (0 == vec->size) {
 		ret = str->len;
 
-		if (scf_string_cat_cstr_len(str, data, len) < 0)
+		if (string_cat_cstr_len(str, data, len) < 0)
 			ret = -1;
 	} else
 		ret = (intptr_t)(vec->data[0]);
 
-	scf_vector_free(vec);
+	vector_free(vec);
 	return ret;
 }
 
 #if 0
 int main(int argc, char* argv[])
 {
-	scf_string_t* s0 = scf_string_alloc();
-	scf_string_t* s1 = scf_string_cstr("hello, world!");
-	scf_string_t* s2 = scf_string_clone(s1);
+	string_t* s0 = string_alloc();
+	string_t* s1 = string_cstr("hello, world!");
+	string_t* s2 = string_clone(s1);
 	printf("s0: %s\n", s0->data);
 	printf("s1: %s\n", s1->data);
 	printf("s2: %s\n", s2->data);
 
-	scf_string_copy(s0, s2);
+	string_copy(s0, s2);
 	printf("s0: %s\n", s0->data);
 
-	printf("s0 cmp s1: %d\n", scf_string_cmp(s0, s1));
+	printf("s0 cmp s1: %d\n", string_cmp(s0, s1));
 
-	scf_string_t* s3 = scf_string_cstr("ha ha ha!");
+	string_t* s3 = string_cstr("ha ha ha!");
 	printf("s3: %s\n", s3->data);
 
-	scf_string_cat(s0, s3);
+	string_cat(s0, s3);
 	printf("s0: %s\n", s0->data);
 
-	scf_string_cat_cstr(s0, "he he he!");
+	string_cat_cstr(s0, "he he he!");
 	printf("s0: %s\n", s0->data);
 
-	scf_string_t* s4  = scf_string_cstr("hello, world!");
-	scf_string_t* s5  = scf_string_cstr("ll");
-	scf_vector_t* vec = scf_vector_alloc();
+	string_t* s4  = string_cstr("hello, world!");
+	string_t* s5  = string_cstr("ll");
+	vector_t* vec = vector_alloc();
 
-	int ret = scf_string_match_kmp(s4, s5, vec);
+	int ret = string_match_kmp(s4, s5, vec);
 	if (ret < 0) {
-		scf_loge("\n");
+		loge("\n");
 		return -1;
 	}
 
@@ -360,10 +367,10 @@ int main(int argc, char* argv[])
 		printf("i: %d, offset: %d\n", i, offset);
 	}
 
-	scf_string_free(s0);
-	scf_string_free(s1);
-	scf_string_free(s2);
-	scf_string_free(s3);
+	string_free(s0);
+	string_free(s1);
+	string_free(s2);
+	string_free(s3);
 	return 0;
 }
 #endif
