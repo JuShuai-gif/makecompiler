@@ -1,5 +1,5 @@
 #include "utils_rbtree.h"
-#include <asm-generic/errno-base.h>
+
 #include <assert.h>
 #include <stdint.h>
 
@@ -501,7 +501,7 @@ rbtree_node_t *rbtree_find(rbtree_t *tree, void *data, rbtree_node_do_pt cmp) {
     return NULL;
 }
 
-int scf_rbtree_foreach(scf_rbtree_t *tree, scf_rbtree_node_t *root, void *data, scf_rbtree_node_do_pt done) {
+int scf_rbtree_foreach(rbtree_t *tree,rbtree_node_t *root, void *data, rbtree_node_do_pt done) {
     if (!tree || !root || !done)
         return -EINVAL;
 
@@ -513,28 +513,28 @@ int scf_rbtree_foreach(scf_rbtree_t *tree, scf_rbtree_node_t *root, void *data, 
     if (&tree->sentinel != root->left) {
         ret = scf_rbtree_foreach(tree, root->left, data, done);
         if (ret < 0) {
-            scf_loge("\n");
+            loge("\n");
             return ret;
         }
     }
 
     ret = done(root, data);
     if (ret < 0) {
-        scf_loge("\n");
+        loge("\n");
         return ret;
     }
 
     if (&tree->sentinel != root->right) {
         ret = scf_rbtree_foreach(tree, root->right, data, done);
         if (ret < 0) {
-            scf_loge("\n");
+            loge("\n");
             return ret;
         }
     }
     return 0;
 }
 
-int scf_rbtree_foreach_reverse(scf_rbtree_t *tree, scf_rbtree_node_t *root, void *data, scf_rbtree_node_do_pt done) {
+int scf_rbtree_foreach_reverse(rbtree_t *tree, rbtree_node_t *root, void *data, rbtree_node_do_pt done) {
     if (!tree || !root || !done)
         return -EINVAL;
 
@@ -546,28 +546,28 @@ int scf_rbtree_foreach_reverse(scf_rbtree_t *tree, scf_rbtree_node_t *root, void
     if (&tree->sentinel != root->right) {
         ret = scf_rbtree_foreach_reverse(tree, root->right, data, done);
         if (ret < 0) {
-            scf_loge("\n");
+            loge("\n");
             return ret;
         }
     }
 
     ret = done(root, data);
     if (ret < 0) {
-        scf_loge("\n");
+        loge("\n");
         return ret;
     }
 
     if (&tree->sentinel != root->left) {
-        ret = scf_rbtree_foreach_reverse(tree, root->left, data, done);
+        ret = rbtree_foreach_reverse(tree, root->left, data, done);
         if (ret < 0) {
-            scf_loge("\n");
+            loge("\n");
             return ret;
         }
     }
     return 0;
 }
 
-int scf_rbtree_depth(scf_rbtree_t *tree, scf_rbtree_node_t *root) {
+int scf_rbtree_depth(rbtree_t *tree, rbtree_node_t *root) {
     if (!tree || !root)
         return -EINVAL;
 
@@ -579,7 +579,7 @@ int scf_rbtree_depth(scf_rbtree_t *tree, scf_rbtree_node_t *root) {
     if (root == tree->root) {
         root->depth = 1;
         root->bdepth = 1;
-    } else if (SCF_RBTREE_BLACK == root->color) {
+    } else if (RBTREE_BLACK == root->color) {
         root->bdepth = root->parent->bdepth + 1;
         root->depth = root->parent->depth + 1;
     } else {
@@ -587,12 +587,12 @@ int scf_rbtree_depth(scf_rbtree_t *tree, scf_rbtree_node_t *root) {
         root->depth = root->parent->depth + 1;
     }
 
-    scf_loge("root->depth: %d, root->bdepth: %d\n", root->depth, root->bdepth);
+    loge("root->depth: %d, root->bdepth: %d\n", root->depth, root->bdepth);
 
     if (&tree->sentinel != root->left) {
         ret = scf_rbtree_depth(tree, root->left);
         if (ret < 0) {
-            scf_loge("\n");
+            loge("\n");
             return ret;
         }
     }
@@ -600,7 +600,7 @@ int scf_rbtree_depth(scf_rbtree_t *tree, scf_rbtree_node_t *root) {
     if (&tree->sentinel != root->right) {
         ret = scf_rbtree_depth(tree, root->right);
         if (ret < 0) {
-            scf_loge("\n");
+            loge("\n");
             return ret;
         }
     }

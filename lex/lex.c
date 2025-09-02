@@ -116,12 +116,13 @@ static int _find_escape_char(const int c)
 
 int lex_open(lex_t** plex,const char* path){
     if (!plex || !path)
-        return -EINVAL;
+        return -EINVAL;// 错误参数
 
     lex_t* lex = calloc(1,sizeof(lex_t));
     if (!lex)
         return -ENOMEM;
 
+	// 打开文件
     lex->fp = fopen(path,"r");
     if (!lex->fp)
     {
@@ -133,7 +134,9 @@ int lex_open(lex_t** plex,const char* path){
         return -1;
     }
 
+	// 记录文件名称
     lex->file = string_cstr(path);
+	// 
     if (!lex->file)
     {
         fclose(lex->fp);
@@ -141,6 +144,7 @@ int lex_open(lex_t** plex,const char* path){
         return -ENOMEM;
     }
 
+	// 
     lex->nb_lines = 1;
     *plex = lex;
     return 0;

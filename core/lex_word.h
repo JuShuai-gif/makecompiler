@@ -6,11 +6,11 @@
 #include "utils_string.h"
 #include "utils_list.h"
 
-
 typedef struct lex_word_s lex_word_t;
 typedef struct complex_s complex_t;
 typedef struct macro_s macro_t;
 
+// 词法单元
 enum lex_words {
     LEX_WORD_PLUS = 0, // +
     LEX_WORD_MINUS,    // -
@@ -176,22 +176,26 @@ enum lex_words {
 
 };
 
+// 复数
 struct complex_s {
-    float real;
-    float imag;
+    float real; // 实部
+    float imag; // 虚部
 };
 
+// 表示一个宏定义
 struct macro_s {
-    int refs;
-    lex_word_t *w;
-    vector_t *argv;
-    lex_word_t *text_list;
+    int refs;// 宏定义引用的次数
+    lex_word_t *w;// 宏的名字
+    vector_t *argv;// 宏的参数列表
+    lex_word_t *text_list;// 宏的展开内容(词法单元链表)
 };
 
+// lexer生成的Token(词法单元)结构体
 struct lex_word_s {
-    lex_word_t *next;
-    int type;
+    lex_word_t *next;// 指向下一个token(链表形式)
+    int type;// token的类型，比如标识符、关键字、整数常量、浮点常量、字符串、字符串、符号
 
+    // 联合体 union: 存储不同类型的常量值
     union {
         int32_t i;    // value for <= int32_t
         uint32_t u32; // value for <= uint32_t
@@ -203,37 +207,46 @@ struct lex_word_s {
         string_t *s;  // value for string
     } data;
 
-    string_t *text; // original text
-    string_t *file; // original code file name
-    int line;       // line in the code file above
-    int pos;        // position in the line above
+    string_t *text; // 原始源码里的字符串(比如 123 if x)
+    string_t *file; // token 所在的源文件名
+    int line;       // 所在行号
+    int pos;        // 所在列号
 };
 
+// 判断 token 是否是标识符
 static inline int lex_is_identity(lex_word_t *w) {
     return LEX_WORD_ID == w->type;
 }
 
+// 判断 token 是否是 运算符或符号
 static inline int lex_is_operator(lex_word_t *w) {
     return w->type >= LEX_WORD_PLUS && w->type <= LEX_WORD_DOT;
 }
 
+// 判断 token 是否是 常量
 static inline int lex_is_const(lex_word_t *w) {
     return w->type >= LEX_WORD_CONST_CHAR && w->type <= LEX_WORD_CONST_STRING;
 }
 
+// 判断 token 是否是 整数常量
 static inline int lex_is_const_integer(lex_word_t *w) {
     return w->type >= LEX_WORD_CONST_CHAR && w->type <= LEX_WORD_CONST_U64;
 }
 
+// 判断 token 是否是 基础类型关键字
 static inline int lex_is_base_type(lex_word_t *w) {
     return LEX_WORD_KEY_CHAR <= w->type && LEX_WORD_KEY_VOID >= w->type;
 }
 
+// 
 macro_t *macro_alloc(lex_word_t *w);
+
 void macro_free(macro_t *m);
 
 lex_word_t *lex_word_alloc(string_t *file, int line, int pos, int type);
+
 lex_word_t *lex_word_clone(lex_word_t *w);
+
 void lex_word_free(lex_word_t *w);
 
 #endif
