@@ -3,11 +3,12 @@
 
 #include "utils_vector.h"
 
+// 字符串结构体
 typedef struct 
 {
-    int capacity;
-    size_t len;
-    char* data;
+    int capacity;// 容量
+    size_t len;// 长度
+    char* data;// 数据
 }string_t;
 
 

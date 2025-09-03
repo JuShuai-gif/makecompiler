@@ -11,12 +11,14 @@ struct list_s{
     struct list_s* next;
 };
 
+// 链表初始化
 static inline void list_init(list_t* h)
 {
     h->prev = h;
     h->next = h;
 }
 
+// 删除节点 n
 static inline void list_del(list_t* n){
     n->prev->next = n->next;
     n->next->prev = n->prev;
@@ -26,6 +28,7 @@ static inline void list_del(list_t* n){
     n->next = NULL;
 }
 
+// 在尾部增加
 static inline void list_add_tail(list_t* h,list_t* n){
     h->prev->next = n;
     n->prev = h->prev;
@@ -33,6 +36,7 @@ static inline void list_add_tail(list_t* h,list_t* n){
     h->prev = n;
 }
 
+// 在头部增加
 static inline void list_add_front(list_t* h,list_t* n){
     h->next->prev = n;
     n->next = h->next;
@@ -40,6 +44,7 @@ static inline void list_add_front(list_t* h,list_t* n){
     h->next = n;
 }
 
+// 链表删除两个节点
 static inline void list_mov2(list_t* h0,list_t* h1){
     if (h1->next == h1) {
         return;
@@ -63,7 +68,7 @@ static inline void list_mov2(list_t* h0,list_t* h1){
 #define list_prev(l) ((l)->prev)
 #define list_empty(h) ((h)->next == (h))
 
-
+// 链表清除
 #define list_clear(h, type, member, type_free) \
 	do {\
 		list_t* l;\
@@ -87,6 +92,7 @@ static inline void list_mov2(list_t* h0,list_t* h1){
 		} \
 	} while (0)
 
+// 链表移除
 #define list_mov(dst, src, type, member) \
 	do {\
 		list_t* l;\

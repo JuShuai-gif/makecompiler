@@ -2,11 +2,14 @@
 
 #define STRING_NUMBER_INC 4
 
+// 字符串分配
 string_t* string_alloc(){
+    // 先分配一个 string_t 结构体
     string_t* s = malloc(sizeof(string_t));
     if (!s)
         return NULL;
 
+    // 分配数据 多加一个1 是 \0
     s->data = malloc(STRING_NUMBER_INC + 1);
     if (!s->data)
     {
@@ -14,13 +17,16 @@ string_t* string_alloc(){
         return NULL;
     }
 
+    // 容量
     s->capacity = STRING_NUMBER_INC;
+    // 长度
     s->len = 0;
+    // 结尾
     s->data[0] = '\0';
     return s;
 }
 
-
+// 字符串克隆
 string_t* string_clone(string_t* s){
     if (!s)
         return NULL;
@@ -51,12 +57,14 @@ string_t* string_clone(string_t* s){
     return s1;
 }
 
+// 从char数组创建 string
 string_t* string_cstr(const char* str){
     if (!str)
         return NULL;
     return string_cstr_len(str,strlen(str));
 }
 
+// 根据char数组和长度
 string_t* string_cstr_len(const char* str,size_t len){
     if (!str)
         return NULL;
@@ -69,6 +77,7 @@ string_t* string_cstr_len(const char* str,size_t len){
     return string_clone(&s);
 }
 
+// 字符串释放
 void string_free(string_t* s){
     if (!s)
         return;
@@ -80,6 +89,7 @@ void string_free(string_t* s){
     s = NULL;
 }
 
+// 打印字符串
 void string_print_bin(string_t* s){
     if (!s)
         return;
@@ -95,6 +105,7 @@ void string_print_bin(string_t* s){
     printf("\n");
 }
 
+// 字符串比较
 int string_cmp(const string_t* s0,const string_t* s1){
     if (s0->len < s1->len)
         return -1;
@@ -103,11 +114,13 @@ int string_cmp(const string_t* s0,const string_t* s1){
     return strncmp(s0->data,s1->data,s0->len);
 }
 
+// 字符串和char数组比较
 int	string_cmp_cstr(const string_t* s0, const char* str)
 {
 	return string_cmp_cstr_len(s0, str, strlen(str));
 }
 
+// string与原始char数组进行对比
 int	string_cmp_cstr_len(const string_t* s0, const char* str, size_t len)
 {
 	string_t s1;
@@ -118,6 +131,7 @@ int	string_cmp_cstr_len(const string_t* s0, const char* str, size_t len)
 	return string_cmp(s0, &s1);
 }
 
+// 字符串复制
 int string_copy(string_t* s0,const string_t* s1){
     if (!s0 || !s1 || !s0->data || !s1->data)
         return -EINVAL;
@@ -133,18 +147,20 @@ int string_copy(string_t* s0,const string_t* s1){
         s0->capacity = s1->len;        
     }
 
-    memcpy(s0->capacity,s1->data,s1->len);
+    memcpy(s0->data,s1->data,s1->len);
     s0->data[s1->len] = '\0';
     s0->len = s1->len;
     return 0;
 }
 
+// 字符串拼接
 int string_cat(string_t* s0,const string_t* s1){
     if (!s0 || !s1 || !s0->data || !s1->data)
         return -EINVAL;
     
     assert(s0->capacity > 0);
     
+    // 判断容量是否够用
     if (s0->len + s1->len > s0->capacity)
     {
         char* p = realloc(s0->data,s0->len + s1->len + STRING_NUMBER_INC + 1);
@@ -160,6 +176,7 @@ int string_cat(string_t* s0,const string_t* s1){
     return 0;
 }
 
+// 将string与char数组拼接
 int string_cat_cstr(string_t* s0,const char* str){
     if (!s0 || !s0->data || !str)
     {
@@ -168,6 +185,7 @@ int string_cat_cstr(string_t* s0,const char* str){
     return string_cat_cstr_len(s0,str,strlen(str));
 }
 
+// 将string与char数组原始数据进行拼接
 int string_cat_cstr_len(string_t* s0,const char* str,size_t len){
     if (!s0 || !s0->data || !str)
         return -EINVAL;
@@ -180,6 +198,7 @@ int string_cat_cstr_len(string_t* s0,const char* str,size_t len){
     return string_cat(s0,&s1);    
 }   
 
+// 字符串填充0
 int string_fill_zero(string_t* s0,size_t len){
     if (!s0 || !s0->data)
         return -EINVAL;
@@ -203,6 +222,7 @@ int string_fill_zero(string_t* s0,size_t len){
     return 0;
 }
 
+// kmp 比对
 static int* _prefix_kmp(const uint8_t* P,int m){
     int* prefix = malloc(sizeof(int)* (m+1));
     if(!prefix)
@@ -230,6 +250,7 @@ static int* _prefix_kmp(const uint8_t* P,int m){
     return prefix;
 }
 
+// kmp匹配
 static int _match_kmp(const uint8_t* T,int Tlen,const uint8_t* P,int Plen,vector_t* offsets){
     if (Tlen <= 0 || Plen <= 0)
         return -EINVAL;
@@ -269,7 +290,7 @@ static int _match_kmp(const uint8_t* T,int Tlen,const uint8_t* P,int Plen,vector
     return 0;
 }
 
-
+// 字符串 kmp 匹配
 int string_match_kmp(const string_t* T,const string_t* P,vector_t* offsets){
     if (!T || !P || !offsets)
     {
@@ -288,6 +309,7 @@ int string_match_kmp_cstr(const uint8_t* T, const uint8_t* P, vector_t* offsets)
 	return _match_kmp(T, strlen(T), P, strlen(P), offsets);
 }
 
+
 int string_match_kmp_cstr_len(const string_t* T, const uint8_t* P, size_t Plen, vector_t* offsets)
 {
 	if (!T || !P || 0 == Plen || !offsets)
@@ -295,6 +317,7 @@ int string_match_kmp_cstr_len(const string_t* T, const uint8_t* P, size_t Plen, 
 
 	return _match_kmp(T->data, T->len, P, Plen, offsets);
 }
+
 
 int string_get_offset(string_t* str, const char* data, size_t len)
 {
@@ -325,55 +348,6 @@ int string_get_offset(string_t* str, const char* data, size_t len)
 	return ret;
 }
 
-#if 0
-int main(int argc, char* argv[])
-{
-	string_t* s0 = string_alloc();
-	string_t* s1 = string_cstr("hello, world!");
-	string_t* s2 = string_clone(s1);
-	printf("s0: %s\n", s0->data);
-	printf("s1: %s\n", s1->data);
-	printf("s2: %s\n", s2->data);
-
-	string_copy(s0, s2);
-	printf("s0: %s\n", s0->data);
-
-	printf("s0 cmp s1: %d\n", string_cmp(s0, s1));
-
-	string_t* s3 = string_cstr("ha ha ha!");
-	printf("s3: %s\n", s3->data);
-
-	string_cat(s0, s3);
-	printf("s0: %s\n", s0->data);
-
-	string_cat_cstr(s0, "he he he!");
-	printf("s0: %s\n", s0->data);
-
-	string_t* s4  = string_cstr("hello, world!");
-	string_t* s5  = string_cstr("ll");
-	vector_t* vec = vector_alloc();
-
-	int ret = string_match_kmp(s4, s5, vec);
-	if (ret < 0) {
-		loge("\n");
-		return -1;
-	}
-
-	int i;
-	for (i = 0; i < vec->size; i++) {
-
-		int offset = (intptr_t)vec->data[i];
-
-		printf("i: %d, offset: %d\n", i, offset);
-	}
-
-	string_free(s0);
-	string_free(s1);
-	string_free(s2);
-	string_free(s3);
-	return 0;
-}
-#endif
 
 
 

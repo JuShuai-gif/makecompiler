@@ -64,7 +64,20 @@
 # 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
 
 # 测试 vector_test.h
-CFILES += vector_test.c
+# CFILES += vector_test.c
+
+# CFLAGS += -g 
+# CFLAGS += -I../../utils
+# CFLAGS += -I../../core
+
+# LDFLAGS +=
+
+# all:
+# 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
+
+# 测试 string_test.h
+CFILES += ../utils_string.c
+CFILES += string_test.c
 
 CFLAGS += -g 
 CFLAGS += -I../../utils
@@ -74,6 +87,5 @@ LDFLAGS +=
 
 all:
 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
-
 
 

@@ -18,6 +18,7 @@
 
 #if 1
 #include <sys/time.h>
+// 获取时间
 static inline int64_t gettime(){
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -42,8 +43,10 @@ static inline uint64_t zero_extend(uint64_t src,int src_bits){
     return src;
 }
 
+// 已知结构体某个成员的指针，反推出整个结构体的指针
 #define object_of(mp,type,member) ((type*)((char*)mp - offsetof(type,member)))
 
+// 交换 x 和 y 的值。typeof(x) 保证类型安全
 #define XCHG(x,y)\
     do{\
         typeof(x) tmp = x;\
@@ -51,6 +54,20 @@ static inline uint64_t zero_extend(uint64_t src,int src_bits){
         y = tmp;\
     }while(0)
 
+
+/*
+logd：调试日志（仅 #define DEBUG 时启用）。
+
+logi：信息日志。
+
+loge：错误日志（红色高亮）。
+
+logw：警告日志（黄色高亮）。
+
+__func__：当前函数名。
+
+__LINE__：当前代码行号。
+*/    
 #ifdef DEBUG
 #define logd(fmt,...) printf("%s(),%d,"fmt,__func__,__LINE__,##__VA_ARGS__)
 #else
@@ -63,6 +80,7 @@ static inline uint64_t zero_extend(uint64_t src,int src_bits){
 #define loge(fmt, ...) printf("%s(), %d, \033[1;31m error:\033[0m "fmt, __func__, __LINE__, ##__VA_ARGS__)
 #define logw(fmt, ...) printf("%s(), %d, \033[1;33m warning:\033[0m "fmt, __func__, __LINE__, ##__VA_ARGS__)
 
+// 检查条件 cond，如果成立则打印错误日志，并 return ret
 #define CHECK_ERROR(cond, ret, fmt, ...) \
 	do { \
 		if (cond) { \

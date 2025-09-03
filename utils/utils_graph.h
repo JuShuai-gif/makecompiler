@@ -3,12 +3,15 @@
 
 #include "utils_vector.h"
 
+// 节点
 typedef struct{
     vector_t* neighbors;
     intptr_t color;
     void* data;
 }graph_node_t;
 
+// 图
+// 图是由节点构成的，节点就是一串vector
 typedef struct 
 {
     vector_t* nodes;

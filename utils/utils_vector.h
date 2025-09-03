@@ -146,7 +146,8 @@ static inline int vector_del(vector_t* v,void* node){
             v->data[j-1] = v->data[j];
 
         v->size--;
-
+        
+        // 当数组容量远大于实际大小时，进行缩容
         if (v->size + NB_MEMBER_INC * 2 < v->capacity)
         {
             void* p = realloc(v->data,sizeof(void*)* (v->capacity - NB_MEMBER_INC));
@@ -230,9 +231,10 @@ static inline void vector_clear(vector_t* v,void(*type_free)(void*)){
 static inline void vector_free(vector_t* v){
     if (v)
     {
+        // 先释放数据
         if (v->data)
             free(v->data);
-
+        // 在释放自己
         free(v);
         v = NULL;
     }
