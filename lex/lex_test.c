@@ -1,5 +1,7 @@
 #include "lex.h"
 
+
+
 int main(int argc,char* argv[]){
     lex_t* lex = NULL;
 

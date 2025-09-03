@@ -54,7 +54,7 @@ static inline void list_mov2(list_t* h0,list_t* h1){
 
 #define LIST_INIT(h) {&h,&h}
 
-#define list_data(l,type,member) ((type*)((char*)l - offseto(type,member)))
+#define list_data(l, type, member)	((type*)((char*)l - offsetof(type, member)))
 
 #define list_head(h) ((h)->next)
 #define list_tail(h) ((h)->prev)

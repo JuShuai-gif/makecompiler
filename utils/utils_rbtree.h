@@ -2,7 +2,7 @@
 #define UTILS_RBTREE_H
 
 #include "utils_def.h"
-#include <cstdint>
+#include <stdint.h>
 
 typedef struct rbtree_s rbtree_t;
 typedef struct rbtree_node_s rbtree_node_t;
@@ -54,5 +54,5 @@ rbtree_node_t *rbtree_find(rbtree_t *tree, void *data, rbtree_node_do_pt cmp);
 
 int rbtree_foreach(rbtree_t *tree, rbtree_node_t *root, void *data, rbtree_node_do_pt done);
 int rbtree_foreach_reverse(rbtree_t *tree, rbtree_node_t *root, void *data, rbtree_node_do_pt done);
-
+int rbtree_depth(rbtree_t *tree, rbtree_node_t *root);
 #endif

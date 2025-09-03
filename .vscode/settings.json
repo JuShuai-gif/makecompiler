@@ -2,6 +2,7 @@
     "files.associations": {
         "lex.h": "c",
         "lex_word.h": "c",
-        "utils_string.h": "c"
+        "utils_string.h": "c",
+        "utils_atomic.h": "c"
     }
 }

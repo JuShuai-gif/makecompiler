@@ -501,7 +501,7 @@ rbtree_node_t *rbtree_find(rbtree_t *tree, void *data, rbtree_node_do_pt cmp) {
     return NULL;
 }
 
-int scf_rbtree_foreach(rbtree_t *tree,rbtree_node_t *root, void *data, rbtree_node_do_pt done) {
+int rbtree_foreach(rbtree_t *tree,rbtree_node_t *root, void *data, rbtree_node_do_pt done) {
     if (!tree || !root || !done)
         return -EINVAL;
 
@@ -511,7 +511,7 @@ int scf_rbtree_foreach(rbtree_t *tree,rbtree_node_t *root, void *data, rbtree_no
     int ret;
 
     if (&tree->sentinel != root->left) {
-        ret = scf_rbtree_foreach(tree, root->left, data, done);
+        ret = rbtree_foreach(tree, root->left, data, done);
         if (ret < 0) {
             loge("\n");
             return ret;
@@ -525,7 +525,7 @@ int scf_rbtree_foreach(rbtree_t *tree,rbtree_node_t *root, void *data, rbtree_no
     }
 
     if (&tree->sentinel != root->right) {
-        ret = scf_rbtree_foreach(tree, root->right, data, done);
+        ret = rbtree_foreach(tree, root->right, data, done);
         if (ret < 0) {
             loge("\n");
             return ret;
@@ -534,7 +534,7 @@ int scf_rbtree_foreach(rbtree_t *tree,rbtree_node_t *root, void *data, rbtree_no
     return 0;
 }
 
-int scf_rbtree_foreach_reverse(rbtree_t *tree, rbtree_node_t *root, void *data, rbtree_node_do_pt done) {
+int rbtree_foreach_reverse(rbtree_t *tree, rbtree_node_t *root, void *data, rbtree_node_do_pt done) {
     if (!tree || !root || !done)
         return -EINVAL;
 
@@ -544,7 +544,7 @@ int scf_rbtree_foreach_reverse(rbtree_t *tree, rbtree_node_t *root, void *data, 
     int ret;
 
     if (&tree->sentinel != root->right) {
-        ret = scf_rbtree_foreach_reverse(tree, root->right, data, done);
+        ret = rbtree_foreach_reverse(tree, root->right, data, done);
         if (ret < 0) {
             loge("\n");
             return ret;
@@ -567,7 +567,7 @@ int scf_rbtree_foreach_reverse(rbtree_t *tree, rbtree_node_t *root, void *data, 
     return 0;
 }
 
-int scf_rbtree_depth(rbtree_t *tree, rbtree_node_t *root) {
+int rbtree_depth(rbtree_t *tree, rbtree_node_t *root) {
     if (!tree || !root)
         return -EINVAL;
 
@@ -590,7 +590,7 @@ int scf_rbtree_depth(rbtree_t *tree, rbtree_node_t *root) {
     loge("root->depth: %d, root->bdepth: %d\n", root->depth, root->bdepth);
 
     if (&tree->sentinel != root->left) {
-        ret = scf_rbtree_depth(tree, root->left);
+        ret = rbtree_depth(tree, root->left);
         if (ret < 0) {
             loge("\n");
             return ret;
@@ -598,7 +598,7 @@ int scf_rbtree_depth(rbtree_t *tree, rbtree_node_t *root) {
     }
 
     if (&tree->sentinel != root->right) {
-        ret = scf_rbtree_depth(tree, root->right);
+        ret = rbtree_depth(tree, root->right);
         if (ret < 0) {
             loge("\n");
             return ret;
@@ -607,110 +607,3 @@ int scf_rbtree_depth(rbtree_t *tree, rbtree_node_t *root) {
     return 0;
 }
 
-#if 0
-typedef struct {
-	scf_rbtree_node_t  node;
-	int d;
-} rbtree_test_t;
-
-static int test_cmp(scf_rbtree_node_t* node0, void* data)
-{
-	rbtree_test_t* v0 = (rbtree_test_t*)node0;
-	rbtree_test_t* v1 = (rbtree_test_t*)data;
-
-	if (v0->d < v1->d)
-		return -1;
-	else if (v0->d > v1->d)
-		return 1;
-	return 0;
-}
-
-static int test_find(scf_rbtree_node_t* node0, void* data)
-{
-	rbtree_test_t* v0 = (rbtree_test_t*)node0;
-	int            d1 = (intptr_t)data;
-
-	scf_logd("v0->d: %d, d1: %d\n", v0->d, d1);
-
-	if (v0->d < d1)
-		return -1;
-	else if (v0->d > d1)
-		return 1;
-	return 0;
-}
-
-static int test_print(scf_rbtree_node_t* node0, void* data)
-{
-	rbtree_test_t* v0 = (rbtree_test_t*)node0;
-
-	scf_loge("v0->d: %d\n", v0->d);
-	return 0;
-}
-
-int main()
-{
-	scf_rbtree_t  tree;
-	scf_rbtree_init(&tree);
-
-	scf_loge("tree->sentinel: %p\n", &tree.sentinel);
-
-	rbtree_test_t* d;
-
-#define N 17 
-
-	int i;
-	for (i = 0; i < N; i++) {
-		d = calloc(1, sizeof(rbtree_test_t));
-		assert(d);
-
-		d->d = i;
-
-		int ret = scf_rbtree_insert(&tree, &d->node, test_cmp);
-		if (ret < 0) {
-			scf_loge("\n");
-			return -1;
-		}
-	}
-
-	scf_rbtree_foreach(&tree, tree.root, NULL, test_print);
-	printf("\n");
-
-	scf_rbtree_depth(&tree, tree.root);
-	printf("\n");
-
-	for (i = 0; i < N / 2; i++) {
-		d = (rbtree_test_t*) scf_rbtree_find(&tree, (void*)(intptr_t)i, test_find);
-
-		assert(d);
-		int ret = scf_rbtree_delete(&tree, &d->node);
-		assert(0 == ret);
-
-		free(d);
-		d = NULL;
-	}
-
-	scf_rbtree_foreach(&tree, tree.root, NULL, test_print);
-	printf("\n");
-
-	scf_rbtree_depth(&tree, tree.root);
-	printf("\n");
-
-	for (i = 0; i < N / 2; i++) {
-		d = calloc(1, sizeof(rbtree_test_t));
-		assert(d);
-
-		d->d = i;
-
-		int ret = scf_rbtree_insert(&tree, &d->node, test_cmp);
-		if (ret < 0) {
-			scf_loge("\n");
-			return -1;
-		}
-	}
-	printf("*****************\n");
-	scf_rbtree_foreach_reverse(&tree, tree.root, NULL, test_print);
-
-	scf_rbtree_depth(&tree, tree.root);
-	return 0;
-}
-#endif
