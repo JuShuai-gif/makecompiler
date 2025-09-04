@@ -3,6 +3,8 @@
         "lex.h": "c",
         "lex_word.h": "c",
         "utils_string.h": "c",
-        "utils_atomic.h": "c"
+        "utils_atomic.h": "c",
+        "operator.h": "c",
+        "core_types.h": "c"
     }
 }
