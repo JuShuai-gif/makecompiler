@@ -52,7 +52,7 @@ struct variable_s
         float f;
         double d;
         complex_t z;
-        string_t& s;
+        string_t* s;
         void* p;
     }data;
 
@@ -97,7 +97,7 @@ int member_add_index(member_t* m,variable_t* member,int index);
 
 variable_t* variable_alloc(lex_word_t* w,type_t* t);
 variable_t* variable_clone(variable_t* var);
-variable_t* variable_reg(variable_t* var);
+variable_t* variable_ref(variable_t* var);
 void variable_free(variable_t* var);
 
 void variable_print(variable_t* var);
@@ -130,7 +130,7 @@ static inline int variable_const(variable_t* v){
 }
 
 static inline int variable_const_integer(variable_t* v){
-    return type_is_integer(v->type) && v->const_flag && 0 == v->nb_pointers && o == v->nb_dimentions;
+    return type_is_integer(v->type) && v->const_flag && 0 == v->nb_pointers && 0 == v->nb_dimentions;
 }
 
 static inline int variable_const_string(variable_t* v){
