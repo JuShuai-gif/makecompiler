@@ -4,9 +4,10 @@
 #include "core_types.h"
 #include "lex_word.h"
 
+// 表示数组维度信息
 typedef struct
 {
-    expr_t* vla;
+    expr_t* vla;// 
     int num;
 }dimention_t;
 
@@ -86,8 +87,6 @@ struct member_s
     variable_t* base;
     vector_t* indexes;
 };
-
-
 
 member_t* member_alloc(variable_t* base);
 void member_free(member_t* m);

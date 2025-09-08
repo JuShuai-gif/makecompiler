@@ -10,7 +10,7 @@ static inline stack_t *stack_alloc() {
     return vector_alloc();
 }
 
-// 栈添加一个节点
+// 栈添加一个节点(末尾添加)
 static inline int stack_push(stack_t *s, void *node) {
     return vector_add(s, node);
 }

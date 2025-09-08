@@ -1,12 +1,12 @@
 #ifndef SCOPE_H
 #define SCOPE_H
 
-#include "list.h"
+#include "utils_list.h"
 #include "utils_vector.h"
 #include "lex_word.h"
 #include "core_types.h"
 
-struct scope_t
+struct scope_s
 {
     list_t list;
     string_t* name;

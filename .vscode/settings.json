@@ -5,6 +5,9 @@
         "utils_string.h": "c",
         "utils_atomic.h": "c",
         "operator.h": "c",
-        "core_types.h": "c"
+        "core_types.h": "c",
+        "scope.h": "c",
+        "type.h": "c",
+        "ast.h": "c"
     }
 }

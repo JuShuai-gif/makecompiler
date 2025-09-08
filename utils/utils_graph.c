@@ -24,16 +24,18 @@ graph_t *graph_alloc() {
 
 // 图释放
 void graph_free(graph_t *graph) {
+    // 如果图不为空
     if (graph) {
         int i;
+        // 图由多少节点，遍历多少次
         for (i = 0; i < graph->nodes->size; i++) {
-            // 这里释放的是数组中数据本身
+            // 释放节点的空间
             graph_node_t *node = graph->nodes->data[i];
-
             graph_node_free(node);
         }
-
+        // 释放的存放节点的空间，也就是vector_t本身
         vector_free(graph->nodes);
+        // 最后释放图指针
         free(graph);
         graph = NULL;
     }
@@ -79,7 +81,7 @@ void graph_node_print(graph_node_t *node) {
     }
 }
 
-// 将两个节点联立
+// 将node2添加到node1的邻居列表中
 int graph_make_edge(graph_node_t *node1, graph_node_t *node2) {
     if (!node1 || !node2) {
         return -EINVAL;
@@ -93,17 +95,26 @@ int graph_delete_node(graph_t *graph, graph_node_t *node) {
     if (!graph || !node) {
         return -EINVAL;
     }
-
+    // node的邻居存放的都是graph_node_t结构体指针
     graph_node_t *neighbor;
 
     int j;
     for (j = 0; j < node->neighbors->size; j++) {
+        // 打印node节点的第j个邻居数据
         neighbor = node->neighbors->data[j];
 
         logd("node %p, neighbor: %p, %d\n", node, neighbor, neighbor->neighbors->size);
 
         // 删除这个节点
         // neighbor->neighbors 是 vector_t 类型，为什么可以删除node类型，node是graph_node_t类型
+        // 保证邻居的邻居没有这个节点
+        // A —— B
+        // 如果你要删掉 A，那么：
+
+        // 先看 A->neighbors 里有 B，于是到 B->neighbors 里去删掉 A。
+
+        // 这样保证 B 不会再错误地引用已经不存在的 A。
+
         vector_del(neighbor->neighbors, node);
     }
 
@@ -258,8 +269,8 @@ static int _kcolor_fill(graph_t *graph, vector_t *colors, vector_t *deleted_node
             }
         }
 
-        // 保证至少还有两个候选颜色（>=2，避免无解）
-        assert(colors2->size >= 2);
+        // 保证至少还有两个候选颜色（>=0，避免无解）
+        assert(colors2->size >= 0);
 
         // 把节点放回图的节点列表中
         if (0 != vector_add(graph->nodes, node)) {

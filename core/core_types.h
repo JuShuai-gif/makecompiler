@@ -14,7 +14,7 @@ typedef struct node_s expr_t;// 是node_t的别名，表示表达式节点。表
 typedef struct operator_s operator_t;// 表示运算符(+ - * / && ||等)，通常和 expr_t 结合使用
 typedef struct block_s block_t;// 表示一个语句块，例如 { ... }，里面可能有多个语句节点（node_t）
 typedef struct function_s function_t;// 表示函数定义，包含函数名、参数列表、返回类型、函数体
-typedef struct scopr_s scope_t;// 表示作用域，保存符号表(变量、函数名)、父作用域指针等
+typedef struct scope_s scope_t;// 表示作用域，保存符号表(变量、函数名)、父作用域指针等
 
 
 //=================  中间代码/三地址码(3AC)  ======================//

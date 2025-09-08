@@ -240,6 +240,15 @@ static inline void vector_free(vector_t* v){
     }
 }
 
+// 由于不能判断v的data存放什么数据，所以不能打印
+static inline void vector_print(vector_t* v){
+    if (!v)
+    {
+        
+    }
+    
+}
+
 #endif
 
 

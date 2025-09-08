@@ -224,70 +224,64 @@ int string_fill_zero(string_t* s0,size_t len){
 
 // kmp 比对
 static int* _prefix_kmp(const uint8_t* P,int m){
-    int* prefix = malloc(sizeof(int)* (m+1));
-    if(!prefix)
-        return NULL;
+	int* prefix = malloc(sizeof(int) * (m + 1));
+	if (!prefix)
+		return NULL;
 
-    prefix[0] = -1;
+	prefix[0] = -1;
 
-    int k = -1;
-    int q;
+	int k = -1;
+	int q;
 
-    for ( q = 0; q < m; q++)
-    {
-        while (k > -1 && P[k+1] != P[q])
-        {
-            k = prefix[k];
-        }
+	for (q = 1; q < m; q++) {
 
-        if (P[k + 1] == P[q])
-        {
-            k++;
-        }
+		while (k > -1 && P[k + 1] != P[q])
+			k = prefix[k];
 
-        prefix[q]=k;
-    }
-    return prefix;
+		if (P[k + 1] == P[q])
+			k++;
+
+		prefix[q] = k;
+	}
+	return prefix;
 }
 
 // kmp匹配
 static int _match_kmp(const uint8_t* T,int Tlen,const uint8_t* P,int Plen,vector_t* offsets){
-    if (Tlen <= 0 || Plen <= 0)
-        return -EINVAL;
-    
-    int n = Tlen;
-    int m = Plen;
+if (Tlen <= 0 || Plen <= 0)
+		return -EINVAL;
 
-    int* prefix = _prefix_kmp(P,m);
-    if (!prefix)
-        return -1;
+	int n = Tlen;
+	int m = Plen;
 
-    int q = -1;
+	int* prefix = _prefix_kmp(P, m);
+	if (!prefix)
+		return -1;
 
-    int i;
+	int q = -1;
+	int i;
 
-    for (i = 0; i < n; i++)
-    {
-        while (q > -1 && P[q+1] != T[i])
-            q = prefix[q];
-        
-        if (P[q+1] == T[i])
-            q++;
-        if (q == m - 1)
-        {
-            logd("KMP find P: %s in T:%s,offset: %d\n",P,T,i-m+1);
+	for (i = 0; i < n; i++) {
 
-            int ret = vector_add(offsets, (void*)(intptr_t)(i - m + 1));
+		while (q > -1 && P[q + 1] != T[i])
+			q = prefix[q];
 
-            if (ret < 0)
-                return ret;
-            
-            q = prefix[q];
-        }
-    }
+		if (P[q + 1] == T[i])
+			q++;
 
-    free(prefix);
-    return 0;
+		if (q == m - 1) {
+			logd("KMP find P: %s in T: %s, offset: %d\n", P, T, i - m + 1);
+
+			int ret = vector_add(offsets, (void*)(intptr_t)(i - m + 1));
+			if (ret < 0)
+				return ret;
+
+			q = prefix[q];
+		}
+	}
+
+	free(prefix);
+	return 0;
 }
 
 // 字符串 kmp 匹配

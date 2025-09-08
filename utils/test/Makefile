@@ -12,16 +12,17 @@
 
 
 # 测试 graph_test.h
-# CFILES += vector_test.c
+CFILES += graph_test.c
+CFILES += ../utils_graph.c
 
-# CFLAGS += -g 
-# CFLAGS += -I../../utils
-# CFLAGS += -I../../core
+CFLAGS += -g 
+CFLAGS += -I../../utils
+CFLAGS += -I../../core
 
-# LDFLAGS +=
+LDFLAGS +=
 
-# all:
-# 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
+all:
+	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
 
 
 
@@ -76,16 +77,16 @@
 # 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
 
 # 测试 string_test.h
-CFILES += ../utils_string.c
-CFILES += string_test.c
+# CFILES += ../utils_string.c
+# CFILES += string_test.c
 
-CFLAGS += -g 
-CFLAGS += -I../../utils
-CFLAGS += -I../../core
+# CFLAGS += -g 
+# CFLAGS += -I../../utils
+# CFLAGS += -I../../core
 
-LDFLAGS +=
+# LDFLAGS +=
 
-all:
-	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
+# all:
+# 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
 
 
