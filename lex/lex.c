@@ -1,5 +1,6 @@
 #include "lex.h"
 
+// 关键词表
 static key_word_t key_words[] = {
     {"if",LEX_WORD_KEY_IF},
     {"else",LEX_WORD_KEY_ELSE},
@@ -80,7 +81,7 @@ static key_word_t key_words[] = {
 	{"struct",    LEX_WORD_KEY_STRUCT},
 };
 
-
+// 转移字符
 static escape_char_t escape_chars[]={
     {'n', '\n'},
     {'r', '\r'},
@@ -88,7 +89,7 @@ static escape_char_t escape_chars[]={
     {'0', '\0'},
 };
 
-
+// 挨个关键字进行比对
 static int _find_key_word(const char* text){
 	int i;
 	for (i = 0; i < sizeof(key_words) / sizeof(key_words[0]); i++) {
@@ -100,6 +101,7 @@ static int _find_key_word(const char* text){
 	return -1;
 }
 
+// 挨个转义字符进行比对
 static int _find_escape_char(const int c)
 {
 	int i;
@@ -114,16 +116,19 @@ static int _find_escape_char(const int c)
 }
 
 
+// 
 int lex_open(lex_t** plex,const char* path){
     if (!plex || !path)
         return -EINVAL;// 错误参数
 
+	// 分配一个 lex_t 空间
     lex_t* lex = calloc(1,sizeof(lex_t));
     if (!lex)
         return -ENOMEM;
 
 	// 打开文件
     lex->fp = fopen(path,"r");
+	// 打开失败
     if (!lex->fp)
     {
         char cwd[4096];
@@ -136,7 +141,7 @@ int lex_open(lex_t** plex,const char* path){
 
 	// 记录文件名称
     lex->file = string_cstr(path);
-	// 
+	// 记录失败
     if (!lex->file)
     {
         fclose(lex->fp);
@@ -144,13 +149,13 @@ int lex_open(lex_t** plex,const char* path){
         return -ENOMEM;
     }
 
-	// 
+	// 个人习惯而言，有的喜欢用 0 作为开始，有的喜欢用 1 作为开始
     lex->nb_lines = 1;
     *plex = lex;
     return 0;
 }
 
-
+// 关闭 lex 
 int lex_close(lex_t* lex){
     if (lex)
     {

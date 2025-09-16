@@ -10,21 +10,24 @@ typedef struct lex_s lex_t;
 // 关键字
 typedef struct
 {
-    char *text;
-    int type;
+    char *text;// 关键字
+    int type;// 类型
 } key_word_t;
 
 // 转义字符
 typedef struct
 {
-    int origin;
-    int escape;
+    int origin;// 源数据
+    int escape;// 转换之后
 } escape_char_t;
 
 #define UTF8_MAX 6
 #define UTF8_LF 1
 
 // 表示一个字符单元
+/*
+一个字母的存储，而utf8存储的是他的码点
+*/
 struct char_s {
     char_t *next;           // 下一个字符单元
     int c;                  // 保存当前字符的 Unicode 码点  对于ASCLL c就是0x00 - 0x7F
@@ -36,6 +39,7 @@ struct char_s {
 };
 
 // 编译器前端 词法分析器lexer 的核心上下文结构体，用于保存 源代码扫描的状态
+// 一个 lex_s 对应一个源文件
 struct lex_s {
     lex_t *next;           // 指向下一个 lex_t 节点
     lex_word_t *word_list; // 指向词法分析得到的 单词(token)链表/列表，每个lex_word_t 可能表示一个标识符、关键字、常量、运算符等
@@ -51,6 +55,7 @@ struct lex_s {
     int pos;        // 当前位置，通常表示在当前行或整个文件中的 字符索引
 };
 
+// 
 char_t *_lex_pop_char(lex_t *lex);
 void _lex_push_char(lex_t *lex, char_t *c);
 
