@@ -55,13 +55,17 @@ struct lex_s {
     int pos;        // 当前位置，通常表示在当前行或整个文件中的 字符索引
 };
 
-// 
+// 吐出一个字符 char
 char_t *_lex_pop_char(lex_t *lex);
+// 往 lex 推一个char
 void _lex_push_char(lex_t *lex, char_t *c);
 
+// 打开 lex
 int lex_open(lex_t **plex, const char *path);
+// 关闭 lex
 int lex_close(lex_t *lex);
 
+// 根据 char_t 分析得到的word
 void lex_push_word(lex_t *lex, lex_word_t *word);
 int lex_pop_word(lex_t *lex, lex_word_t **pword);
 
