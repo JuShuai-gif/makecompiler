@@ -8,6 +8,9 @@
         "core_types.h": "c",
         "scope.h": "c",
         "type.h": "c",
-        "ast.h": "c"
+        "ast.h": "c",
+        "utils_list.h": "c",
+        "utils_def.h": "c",
+        "utils_vector.h": "c"
     }
 }

@@ -28,6 +28,7 @@ static inline int64_t gettime(){
 
 #endif
 
+// 把 src 的低 src_bits 位保留，其余高位清零。常用于 无符号数扩展
 static inline uint64_t sign_extend(uint64_t src,int src_bits){
     uint64_t sign = src >> (src_bits - 1) & 0x1;
     uint64_t mask = (~sign + 1) << (src_bits - 1);
@@ -36,6 +37,8 @@ static inline uint64_t sign_extend(uint64_t src,int src_bits){
     return src;
 }
 
+// 把 src_bits 位的数（有符号）扩展为 64 位。
+// 常用于 指令立即数扩展，例如 RISC-V、x86 的指令里，12 位、16 位、24 位等立即数需要扩展到寄存器字长
 static inline uint64_t zero_extend(uint64_t src,int src_bits){
     uint64_t mask = (1ULL << src_bits) -1;
 

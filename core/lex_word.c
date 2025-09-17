@@ -1,14 +1,18 @@
 #include "lex_word.h"
 
+// 词法单元分配
 lex_word_t* lex_word_alloc(string_t* file,int line,int pos,int type){
+    // 文件名称不对，直接返回
     if (!file)
         return NULL;
     
+    // 创建一个 lex_word_t 变量
     lex_word_t* w = calloc(1,sizeof(lex_word_t));
 
+    // 如果 w 为空
     if (!w)
         return NULL;
-    
+    // 
     w->file = string_clone(file);
     if (!w->file)
     {
@@ -22,6 +26,7 @@ lex_word_t* lex_word_alloc(string_t* file,int line,int pos,int type){
     return w;
 }
 
+// 克隆 word
 lex_word_t* lex_word_clone(lex_word_t* w){
     if (!w)
         return NULL;
@@ -35,18 +40,19 @@ lex_word_t* lex_word_clone(lex_word_t* w){
 
     switch (w->type)
     {
+    // float
     case LEX_WORD_CONST_FLOAT:
         w1->data.f = w->data.f;
         break;
-    
+    // double
     case LEX_WORD_CONST_DOUBLE:
         w1->data.d = w->data.d;
         break;
-    
+    // complex
     case LEX_WORD_CONST_COMPLEX:
         w1->data.z = w->data.z;
         break;
-    
+    // string
     case LEX_WORD_CONST_STRING:
         if (w->data.s)
         {
@@ -94,7 +100,7 @@ lex_word_t* lex_word_clone(lex_word_t* w){
 
 
 
-
+// 释放 lex_word_t
 void lex_word_free(lex_word_t* w)
 {
 	if (w) {
@@ -113,15 +119,19 @@ void lex_word_free(lex_word_t* w)
 	}
 }
 
+// 宏分配
 macro_t* macro_alloc(lex_word_t* w)
 {
+    // 
 	if (!w)
 		return NULL;
 
+    // 分配空间
 	macro_t* m = calloc(1, sizeof(macro_t));
 	if (!m)
 		return NULL;
 
+    // 
 	m->w    = w;
 	m->refs = 1;
 	return m;

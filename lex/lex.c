@@ -176,44 +176,60 @@ int lex_close(lex_t* lex){
     return 0;
 }
 
+// 往lex中push word
 void lex_push_word(lex_t* lex,lex_word_t* w){
-    if (lex && w)
+    // 如果不为空
+	if (lex && w)
     {
+		// 这个是倒序插入的，这个需要注意，意思是在当前word上挂载lex的word_list
         w->next = lex->word_list;
+		// 将挂载后的 w 再重新赋值给 word_list
         lex->word_list = w;
     }
 }
 
+// 处理 + 号
 static int _lex_plus(lex_t* lex, lex_word_t** pword, char_t* c0){
-    char_t* c1 = _lex_pop_char(lex);
-
+    // 将 lex 中的char吐出一个
+	char_t* c1 = _lex_pop_char(lex);
+	// 如果第一个 char 是 + 
     if ('+' == c1->c)
     {
+		// 再吐出一个 char 
         char_t* c2 = _lex_pop_char(lex);
 
+		// 如果第二个符号是 +
         if ('+' == c2->c)
             logw("+++ may cause a BUG in file: %s, line: %d\n", lex->file->data, lex->nb_lines);
         
+		// 再把 c2 送进去
         _lex_push_char(lex,c2);
+		// 将 C2 置为 NULL
         c2 = NULL;
 
+		// 分配一个 word
         lex_word_t* w = lex_word_alloc(lex->file,lex->nb_lines,lex->pos,LEX_WORD_INC);
-        w->text = string_cstr("++");
-        lex->pos += 2;
-
-        *pword = 2;
-
-        free(c1);
-        c1 = NULL;
-    }else if('=' == c1->c){
-        lex_word_t* w = lex_word_alloc(lex->file,lex->nb_lines,lex->pos,LEX_WORD_ADD_ASSIGN);
-        w->text = string_cstr("+=");
+        // 将 ++ 设置为 w 的 text
+		w->text = string_cstr("++");
+		// 将位置向后 移动 2 位
         lex->pos += 2;
 
         *pword = w;
+
         free(c1);
         c1 = NULL;
-    }else{
+    }else if('=' == c1->c){// 两个符号 +=
+		// 先分配一个 word 
+        lex_word_t* w = lex_word_alloc(lex->file,lex->nb_lines,lex->pos,LEX_WORD_ADD_ASSIGN);
+        // 将文本复制给 text
+		w->text = string_cstr("+=");
+        // 将位置位移 2 位
+		lex->pos += 2;
+		// 
+        *pword = w;
+        free(c1);
+        c1 = NULL;
+    }else{// 一个char +
         _lex_push_char(lex,c1);
         c1 = NULL;
 
@@ -228,16 +244,21 @@ static int _lex_plus(lex_t* lex, lex_word_t** pword, char_t* c0){
 	return 0;
 }
 
+// 处理 - 号，--、-=、->、-
 static int _lex_minus(lex_t* lex,lex_word_t** pword,char_t* c0){
+	// 吐出第一个符号 c1
     char_t* c1 = _lex_pop_char(lex);
-
+	// 如果符号是 - 号
     if ('-' == c1->c)
     {
+		// 再吐出第二个 char - 
         char_t* c2 = _lex_pop_char(lex);
 
+		// 如果第二个符号是 - 号
         if ('-' == c2->c)
             logw("--- may cause a BUG in file: %s, line: %d\n", lex->file->data, lex->nb_lines);
         
+		// 
         _lex_push_char(lex,c2);
         c2 = NULL;
 
@@ -282,6 +303,7 @@ static int _lex_minus(lex_t* lex,lex_word_t** pword,char_t* c0){
     return 0;
 }
 
+// 处理 数字
 static int _lex_number(lex_t* lex,lex_word_t** pword,char_t* c0){
     lex_word_t* w = NULL;
     string_t* s = NULL;
@@ -289,7 +311,7 @@ static int _lex_number(lex_t* lex,lex_word_t** pword,char_t* c0){
     char_t* c2 = NULL;
 
     int ret = 0;
-
+	// 如果第一个符号是0
     if ('0' == c0->c)
     {
         s = string_cstr_len(c0->utf8,1);
@@ -297,37 +319,43 @@ static int _lex_number(lex_t* lex,lex_word_t** pword,char_t* c0){
 
         free(c0);
         c0 = NULL;
-
+		// 吐出 第二个char
         c1 = _lex_pop_char(lex);
 
+		// 
         string_cat_cstr_len(s,c1->utf8,1);
         lex->pos++;
 
+		// 判断第二个字符 char
         switch (c1->c)
         {
+		// 0x、0X表示 16进制
         case 'x':
         case 'X':// base 16
             ret = _lex_number_base_16(lex,pword,s);
             break;
-        
+        // 0b 表示 二进制
         case 'b':// base 2
             ret = _lex_number_base_2(lex,pword,s);
             break;
-
+		// 0. 表示双精度浮点数
         case '.':// double
             ret = _lex_double(lex,pword,s);
             break;
-        
+		// 
         default:
             lex->pos--;
+
             s->data[--s->len]= "\0";
 
             _lex_push_char(lex,c1);
-
+			// 0-9
             if (c1->c < '0' || c1->c > '9')
             {
+				// 先分配一个 word
                 w = lex_word_alloc(lex->file,lex->nb_lines,lex->pos,LEX_WORD_CONST_INT);
-                w->data.u64 = atoi(s->data);
+                // 
+				w->data.u64 = atoi(s->data);
 
                 w->text = s;
                 *pword = w;
@@ -349,6 +377,7 @@ static int _lex_number(lex_t* lex,lex_word_t** pword,char_t* c0){
     c0 = NULL;
 }
 
+// 标识符
 static int _lex_identity(lex_t* lex,lex_word_t** pword,char_t* c0){
     string_t* s = string_cstr_len(c0->utf8,c0->len);
 
@@ -420,6 +449,7 @@ static int _lex_identity(lex_t* lex,lex_word_t** pword,char_t* c0){
     return -1;
 }
 
+// char 字符
 static int _lex_char(lex_t* lex,lex_word_t** pword,char_t* c0){
     string_t* s = NULL;
     lex_word_t* w = NULL;
@@ -472,6 +502,7 @@ static int _lex_char(lex_t* lex,lex_word_t** pword,char_t* c0){
 	return 0;
 }
 
+// 字符串
 static int _lex_string(lex_t* lex,lex_word_t** pword,char_t* c0){
     lex_word_t* w = NULL;
     string_t* s = string_cstr_len(c0->utf8,1);
@@ -548,6 +579,7 @@ static int _lex_string(lex_t* lex,lex_word_t** pword,char_t* c0){
 	}
 }
 
+// 宏定义
 static int _lex_macro(lex_t* lex){
 	char_t*  h  =  NULL;
 	char_t** pp = &h;
@@ -596,6 +628,7 @@ static int _lex_macro(lex_t* lex){
 	return 0;
 }
 
+// 从输入流中丢弃字符，直到遇到指定的结束符号为止（c0，或者 c0+c1 的组合）。同时它还会维护行号和列号。
 static void _lex_drop_to(lex_t* lex,int c0,int c1){
     char_t* c = NULL;
 
@@ -637,6 +670,7 @@ static void _lex_drop_to(lex_t* lex,int c0,int c1){
     }
 }
 
+// 吐出 词法单元 word
 int __lex_pop_word(lex_t* lex,lex_word_t** pword){
     list_t* l = NULL;
     char_t* c = NULL;
@@ -905,7 +939,7 @@ int __lex_pop_word(lex_t* lex,lex_word_t** pword){
 
 
 
-
+// 解析宏定义参数
 static int __parse_macro_argv(lex_t* lex, macro_t* m)
 {
 	lex_word_t* w = NULL;
@@ -979,6 +1013,7 @@ static int __parse_macro_argv(lex_t* lex, macro_t* m)
 	return 0;
 }
 
+// 解析宏定义
 static int __parse_macro_define(lex_t* lex)
 {
 	lex_word_t** pp;
@@ -1077,6 +1112,7 @@ static int __parse_macro_define(lex_t* lex)
 	return 0;
 }
 
+// 填充宏定义
 static int __fill_macro_argv(lex_t* lex, macro_t* m, lex_word_t* use, vector_t* argv)
 {
 	lex_word_t** pp;
@@ -1169,6 +1205,7 @@ error:
 	return ret;
 }
 
+// 转换 str
 static int __convert_str(lex_word_t* h)
 {
 	lex_word_t* w;
@@ -1208,6 +1245,7 @@ static int __convert_str(lex_word_t* h)
 	return 0;
 }
 
+// 寻找宏定义
 static macro_t* __find_macro(lex_t* lex, lex_word_t* w)
 {
 	if (!lex->macros)
@@ -1226,6 +1264,7 @@ static macro_t* __find_macro(lex_t* lex, lex_word_t* w)
 	return NULL;
 }
 
+// 使用宏
 static int __use_macro(lex_t* lex, macro_t* m, lex_word_t* use)
 {
 	lex_word_t** pp;
@@ -1422,6 +1461,7 @@ int __lex_use_macro(lex_t* lex, lex_word_t** pp)
 	return 0;
 }
 
+// 吐出一个词法单元 word
 int lex_pop_word(lex_t* lex, lex_word_t** pword)
 {
 	if (!lex || !lex->fp || !pword)

@@ -12,17 +12,17 @@
 
 
 # 测试 graph_test.h
-CFILES += graph_test.c
-CFILES += ../utils_graph.c
+# CFILES += graph_test.c
+# CFILES += ../utils_graph.c
 
-CFLAGS += -g 
-CFLAGS += -I../../utils
-CFLAGS += -I../../core
+# CFLAGS += -g 
+# CFLAGS += -I../../utils
+# CFLAGS += -I../../core
 
-LDFLAGS +=
+# LDFLAGS +=
 
-all:
-	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
+# all:
+# 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
 
 
 
@@ -89,4 +89,12 @@ all:
 # all:
 # 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
 
+# 测试 utils_def.h
+CFILES += def_test.c
 
+CFLAGS += -g
+CFLAGS += -I../../utils
+
+LDFLAGS +=
+all:
+	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
