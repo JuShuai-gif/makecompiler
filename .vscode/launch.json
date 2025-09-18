@@ -5,7 +5,7 @@
       "name": "C Debug (GDB)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/utils/test/a.out",   // 可执行文件路径
+      "program": "${workspaceFolder}/lex/a.out",   // 可执行文件路径
       "args": [],                             // 程序运行参数，可以自己填
       "stopAtEntry": false,                   // 是否在 main 停住
       "cwd": "${workspaceFolder}",            // 工作目录

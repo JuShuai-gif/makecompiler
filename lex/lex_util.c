@@ -212,6 +212,7 @@ int _lex_op3_ll1(lex_t *lex, lex_word_t **pword, char_t *c0,
     return 0;
 }
 
+// 十进制处理
 int _lex_number_base_10(lex_t *lex, lex_word_t **pword, string_t *s) {
     char_t *c2;
     char_t *c3;
@@ -298,6 +299,7 @@ int _lex_number_base_10(lex_t *lex, lex_word_t **pword, string_t *s) {
     return 0;
 }
 
+// 十六进制处理
 int _lex_number_base_16(lex_t *lex, lex_word_t **pword, string_t *s) {
     char_t *c2;
     lex_word_t *w;
@@ -355,6 +357,7 @@ int _lex_number_base_16(lex_t *lex, lex_word_t **pword, string_t *s) {
     }
 }
 
+// 8 进制处理
 int _lex_number_base_8(lex_t *lex, lex_word_t **pword, string_t *s) {
     char_t *c2;
     lex_word_t *w;
@@ -406,6 +409,7 @@ int _lex_number_base_8(lex_t *lex, lex_word_t **pword, string_t *s) {
     }
 }
 
+// 2进制处理
 int _lex_number_base_2(lex_t *lex, lex_word_t **pword, string_t *s) {
     char_t *c2;
     lex_word_t *w;
@@ -459,6 +463,7 @@ int _lex_number_base_2(lex_t *lex, lex_word_t **pword, string_t *s) {
     }
 }
 
+// 浮点数处理
 int _lex_double(lex_t *lex, lex_word_t **pword, string_t *s) {
     lex_word_t *w;
     char_t *c2;
@@ -493,6 +498,7 @@ int _lex_double(lex_t *lex, lex_word_t **pword, string_t *s) {
     return 0;
 }
 
+// . 处理
 int _lex_dot(lex_t *lex, lex_word_t **pword, char_t *c0) {
     char_t *c1 = _lex_pop_char(lex);
     char_t *c2 = NULL;
