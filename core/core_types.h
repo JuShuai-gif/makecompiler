@@ -18,7 +18,7 @@ typedef struct scope_s scope_t;// 表示作用域，保存符号表(变量、函
 
 
 //=================  中间代码/三地址码(3AC)  ======================//
-typedef struct str_3ac_code_s str_3ac_code_t;// 表示三地址码(TAC)形式的一条或一段代码
+typedef struct _3ac_code_s _3ac_code_t;// 表示三地址码(TAC)形式的一条或一段代码
 typedef struct inst_ops_s inst_ops_t;// 表示指令操作数。可能是寄存器、立即数、内存地址等
 typedef struct regs_ops_s regs_ops_t;// 表示寄存器操作数(专门用于寄存器分配阶段)
 typedef struct register_s register_t;// 抽象寄存器信息，可能包含编号、是否被占用、分配给那个变量等

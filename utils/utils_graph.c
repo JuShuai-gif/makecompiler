@@ -193,14 +193,14 @@ static int _kcolor_delete(graph_t *graph, int k, vector_t *deleted_nodes) {
 
             // 度数 < k，可以删除该节点
             if (0 != graph_delete_node(graph, node)) {
-                loge("scf_graph_delete_node\n"); // 打印错误日志
-                return -1;                       // 删除失败
+                loge("  graph_delete_node\n"); // 打印错误日志
+                return -1;                     // 删除失败
             }
 
             // 把删除的节点加入 deleted_nodes 记录下来
             if (0 != vector_add(deleted_nodes, node)) {
-                loge("scf_graph_delete_node\n"); // 打印错误日志
-                return -1;                       // 插入失败
+                loge("  graph_delete_node\n"); // 打印错误日志
+                return -1;                     // 插入失败
             }
             nb_deleted++;
             // 注意：这里没有 i++，因为删除节点后 graph->nodes->data[i] 已经被更新，

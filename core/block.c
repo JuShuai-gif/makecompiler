@@ -76,7 +76,7 @@ type_t *block_find_type(block_t *b, const char *name) {
         }
         b = (block_t *)(b->node.parent);
     }
-    return NULL:
+    return NULL;
 }
 
 type_t *block_find_type_type(block_t *b, const int type) {
@@ -122,7 +122,7 @@ function_t *block_find_function(block_t *b, const char *name) {
         }
         b = (block_t *)(b->node.parent);
     }
-    return NULL:
+    return NULL;
 }
 
 label_t *block_find_label(block_t *b, const char *name) {
@@ -138,5 +138,5 @@ label_t *block_find_label(block_t *b, const char *name) {
         }
         b = (block_t *)(b->node.parent);
     }
-    return NULL:
+    return NULL;
 }

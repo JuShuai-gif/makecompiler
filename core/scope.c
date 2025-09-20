@@ -170,37 +170,37 @@ function_t *scope_find_proper_function(scope_t *scope, const char *name, vector_
 }
 
 int scope_find_overloaded_functions(vector_t **pfunctions, scope_t *scope, const int op_type, vector_t *argv) {
-    function_t* f;
-	vector_t*   vec;
-    list_t*     l;
+    function_t *f;
+    vector_t *vec;
+    list_t *l;
 
-	vec =vector_alloc();
-	if (!vec)
-		return -ENOMEM;
+    vec = vector_alloc();
+    if (!vec)
+        return -ENOMEM;
 
-	for (l = list_head(&scope->operator_list_head); l != list_sentinel(&scope->operator_list_head); l = list_next(l)) {
-		f  = list_data(l, function_t, list);
+    for (l = list_head(&scope->operator_list_head); l != list_sentinel(&scope->operator_list_head); l = list_next(l)) {
+        f = list_data(l, function_t, list);
 
-		if (op_type != f->op_type)
-			continue;
+        if (op_type != f->op_type)
+            continue;
 
-		if (!function_like_argv(f->argv, argv))
-			continue;
+        if (!function_like_argv(f->argv, argv))
+            continue;
 
-		int ret = vector_add(vec, f);
-		if (ret < 0) {
-			vector_free(vec);
-			return ret;
-		}
-	}
+        int ret = vector_add(vec, f);
+        if (ret < 0) {
+            vector_free(vec);
+            return ret;
+        }
+    }
 
-	if (0 == vec->size) {
-		vector_free(vec);
-		return -404;
-	}
+    if (0 == vec->size) {
+        vector_free(vec);
+        return -404;
+    }
 
-	*pfunctions = vec;
-	return 0;
+    *pfunctions = vec;
+    return 0;
 }
 
 int scope_find_like_functions(vector_t **pfunctions, scope_t *scope, const char *name, vector_t *argv) {
@@ -217,14 +217,14 @@ int scope_find_like_functions(vector_t **pfunctions, scope_t *scope, const char 
 
         if (strcmp(f->node.w->text->data, name))
             continue;
-        int ret = scf_vector_add(vec, f);
+        int ret = vector_add(vec, f);
         if (ret < 0) {
-            scf_vector_free(vec);
+            vector_free(vec);
             return ret;
         }
     }
     if (0 == vec->size) {
-        scf_vector_free(vec);
+        vector_free(vec);
         return -404;
     }
 
@@ -233,14 +233,14 @@ int scope_find_like_functions(vector_t **pfunctions, scope_t *scope, const char 
 }
 
 label_t *scope_find_label(scope_t *scope, const char *name) {
-    label_t* label;
-	list_t*  l;
+    label_t *label;
+    list_t *l;
 
-	for (l    = list_head(&scope->label_list_head); l != list_sentinel(&scope->label_list_head); l = list_next(l)) {
-		label = list_data(l, label_t, list);
+    for (l = list_head(&scope->label_list_head); l != list_sentinel(&scope->label_list_head); l = list_next(l)) {
+        label = list_data(l, label_t, list);
 
-		if (!strcmp(name, label->w->text->data))
-			return label;
-	}
-	return NULL;
+        if (!strcmp(name, label->w->text->data))
+            return label;
+    }
+    return NULL;
 }

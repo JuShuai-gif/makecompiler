@@ -11,6 +11,9 @@
         "ast.h": "c",
         "utils_list.h": "c",
         "utils_def.h": "c",
-        "utils_vector.h": "c"
+        "utils_vector.h": "c",
+        "parse.h": "c",
+        "list": "c",
+        "functional": "c"
     }
 }

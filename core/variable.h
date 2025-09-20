@@ -29,7 +29,7 @@ struct variable_s {
     int size;      // 类型大小
     int data_size; // 实际数据大小
 
-    int bit_offsets; // 位域偏移
+    int bit_offset; // 位域偏移
     int bit_size;    // 位域大小
 
     int n_pins; // EDA（电子设计自动化）相关：绑定的引脚数
