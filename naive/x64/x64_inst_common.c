@@ -1,0 +1,399 @@
+#include "x64.h"
+
+
+int x64_float_OpCode_type(int OpCode_type, int var_type)
+{
+	if (VAR_FLOAT == var_type) {
+
+		switch (OpCode_type) {
+			case X64_MOV:
+				return X64_MOVSS;
+				break;
+
+			case X64_ADD:
+				return X64_ADDSS;
+				break;
+			case X64_SUB:
+				return X64_SUBSS;
+				break;
+			case X64_MUL:
+				return X64_MULSS;
+				break;
+			case X64_DIV:
+				return X64_DIVSS;
+				break;
+
+			default:
+				break;
+		};
+	} else {
+		switch (OpCode_type) {
+			case X64_MOV:
+				return X64_MOVSD;
+				break;
+
+			case X64_ADD:
+				return X64_ADDSD;
+				break;
+			case X64_SUB:
+				return X64_SUBSD;
+				break;
+			case X64_MUL:
+				return X64_MULSD;
+				break;
+			case X64_DIV:
+				return X64_DIVSD;
+				break;
+
+			default:
+				break;
+		};
+	}
+
+	return -1;
+}
+
+static int _x64_inst_op2_imm(int OpCode_type, dag_node_t* dst, dag_node_t* src, _3ac_code_t* c, function_t* f)
+{
+	x64_OpCode_t*   OpCode;
+	instruction_t*  inst;
+	register_t* rd   = NULL;
+	register_t* rs   = NULL;
+	rela_t*         rela = NULL;
+
+	assert( variable_const(src->var));
+	assert(!variable_float(src->var));
+
+	int src_size = x64_variable_size(src->var);
+	int dst_size = x64_variable_size(dst->var);
+
+	src_size = src_size > dst_size ? dst_size : src_size;
+
+	if (dst->color < 0
+			&& 0 == dst->var->bp_offset
+			&& dst->var->tmp_flag) {
+
+		if (X64_MOV != OpCode_type) {
+			loge("\n");
+			return -1;
+		}
+
+		X64_SELECT_REG_CHECK(&rd, dst, c, f, 0);
+	}
+
+	if (dst->color > 0) {
+
+		if (X64_MOV == OpCode_type)
+			X64_SELECT_REG_CHECK(&rd, dst, c, f, 0);
+		else
+			X64_SELECT_REG_CHECK(&rd, dst, c, f, 1);
+
+		OpCode = x64_find_OpCode(OpCode_type, src_size, dst_size, X64_I2G);
+		if (OpCode) {
+			inst = x64_make_inst_I2G(OpCode, rd, (uint8_t*)&src->var->data, src_size);
+			X64_INST_ADD_CHECK(c->instructions, inst);
+			return 0;
+		}
+
+		OpCode = x64_find_OpCode(OpCode_type, src_size, dst_size, X64_I2E);
+		if (OpCode) {
+			inst = x64_make_inst_I2E(OpCode, rd, (uint8_t*)&src->var->data, src_size);
+			X64_INST_ADD_CHECK(c->instructions, inst);
+			return 0;
+		}
+
+		OpCode = x64_find_OpCode(OpCode_type, src_size, dst_size, X64_G2E);
+		if (!OpCode) {
+			loge("\n");
+			return -EINVAL;
+		}
+
+		src->color = -1;
+		src->var->tmp_flag = 1;
+		X64_SELECT_REG_CHECK(&rs, src, c, f, 1);
+
+		inst = x64_make_inst_G2E(OpCode, rd, rs);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+
+		src->color  = 0;
+		src->loaded = 0;
+		src->var->tmp_flag = 0;
+		assert(0 == vector_del(rs->dag_nodes, src));
+		return 0;
+	}
+
+	OpCode = x64_find_OpCode(OpCode_type, src_size, dst_size, X64_I2E);
+	if (OpCode) {
+		inst = x64_make_inst_I2M(&rela, OpCode, dst->var, NULL, (uint8_t*)&src->var->data, src_size);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+		X64_RELA_ADD_CHECK(f->data_relas, rela, c, dst->var, NULL);
+		return 0;
+	}
+
+	OpCode = x64_find_OpCode(OpCode_type, src_size, dst_size, X64_G2E);
+	if (!OpCode) {
+		loge("\n");
+		return -EINVAL;
+	}
+
+	src->color = -1;
+	src->var->tmp_flag = 1;
+	X64_SELECT_REG_CHECK(&rs, src, c, f, 1);
+
+	inst = x64_make_inst_G2M(&rela, OpCode, dst->var, NULL, rs);
+	X64_INST_ADD_CHECK(c->instructions, inst);
+	X64_RELA_ADD_CHECK(f->data_relas, rela, c, dst->var, NULL);
+
+	src->color  = 0;
+	src->loaded = 0;
+	src->var->tmp_flag = 0;
+	assert(0 == vector_del(rs->dag_nodes, src));
+	return 0;
+}
+
+static int _x64_inst_op2_imm_str(int OpCode_type, dag_node_t* dst, dag_node_t* src, _3ac_code_t* c, function_t* f)
+{
+	if (X64_MOV != OpCode_type) {
+		loge("\n");
+		return -EINVAL;
+	}
+
+	register_t* rd   = NULL;
+	instruction_t*  inst = NULL;
+	x64_OpCode_t*   lea  = x64_find_OpCode(X64_LEA, 8, 8, X64_E2G);
+	rela_t*         rela = NULL;
+
+	int size0 = x64_variable_size(dst->var);
+	int size1 = x64_variable_size(src->var);
+
+	assert(8 == size0);
+	assert(8 == size1);
+
+	X64_SELECT_REG_CHECK(&rd, dst, c, f, 0);
+
+	src->var->global_flag = 1;
+	src->var->local_flag  = 0;
+	src->var->tmp_flag    = 0;
+
+	inst = x64_make_inst_M2G(&rela, lea, rd, NULL, src->var);
+	X64_INST_ADD_CHECK(c->instructions, inst);
+	X64_RELA_ADD_CHECK(f->data_relas, rela, c, src->var, NULL);
+	return 0;
+}
+
+int x64_inst_op2(int OpCode_type, dag_node_t* dst, dag_node_t* src, _3ac_code_t* c, function_t* f)
+{
+	assert(0 != dst->color);
+
+	x64_OpCode_t*   OpCode = NULL;
+	register_t* rs     = NULL;
+	register_t* rd     = NULL;
+	instruction_t*  inst   = NULL;
+	rela_t*         rela   = NULL;
+
+	if (0 == src->color) {
+
+		if (variable_const_string(src->var))
+			return _x64_inst_op2_imm_str(OpCode_type, dst, src, c, f);
+
+		if (!variable_float(src->var))
+			return _x64_inst_op2_imm(OpCode_type, dst, src, c, f);
+
+		src->color = -1;
+		src->var->global_flag = 1;
+	}
+
+	int src_size = x64_variable_size(src->var);
+	int dst_size = x64_variable_size(dst->var);
+
+	src_size = src_size > dst_size ? dst_size : src_size;
+
+	if (X64_MOV          == OpCode_type
+			|| X64_MOVSS == OpCode_type
+			|| X64_MOVSD == OpCode_type)
+		X64_SELECT_REG_CHECK(&rd, dst, c, f, 0);
+	else
+		X64_SELECT_REG_CHECK(&rd, dst, c, f, 1);
+
+	if (src->color > 0) {
+		X64_SELECT_REG_CHECK(&rs, src, c, f, 1);
+
+		if (X64_MOV == OpCode && src->color == dst->color)
+			return 0;
+
+		OpCode = x64_find_OpCode(OpCode_type, src_size, dst_size, X64_G2E);
+		if (OpCode) {
+			inst = x64_make_inst_G2E(OpCode, rd, rs);
+			X64_INST_ADD_CHECK(c->instructions, inst);
+
+		} else {
+			OpCode = x64_find_OpCode(OpCode_type, src_size, dst_size, X64_E2G);
+			if (!OpCode) {
+				loge("OpCode_type: %d, size: %d, size: %d\n", OpCode_type, src_size, dst_size);
+				return -EINVAL;
+			}
+
+			inst = x64_make_inst_E2G(OpCode, rd, rs);
+			X64_INST_ADD_CHECK(c->instructions, inst);
+		}
+	} else {
+		OpCode = x64_find_OpCode(OpCode_type, src_size, dst_size, X64_E2G);
+		if (!OpCode) {
+			loge("OpCode_type: %d, size: %d, size: %d\n", OpCode_type, src_size, dst_size);
+			return -EINVAL;
+		}
+
+		inst = x64_make_inst_M2G(&rela, OpCode, rd, NULL, src->var);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+		X64_RELA_ADD_CHECK(f->data_relas, rela, c, src->var, NULL);
+	}
+
+	return 0;
+}
+
+int x64_inst_movx(dag_node_t* dst, dag_node_t* src, _3ac_code_t* c, function_t* f)
+{
+	x64_OpCode_t*   movx;
+	x64_OpCode_t*   mov;
+	x64_OpCode_t*   push;
+	x64_OpCode_t*   pop;
+	x64_OpCode_t*   xor;
+
+	instruction_t*  inst;
+	register_t* rs;
+	register_t* rd = NULL;
+
+	X64_SELECT_REG_CHECK(&rd, dst, c, f, 0);
+
+	if (type_is_signed(src->var->type)) {
+		movx = x64_find_OpCode(X64_MOVSX, src->var->size, dst->var->size, X64_E2G);
+
+	} else if (src->var->size <= 2) {
+		movx = x64_find_OpCode(X64_MOVZX, src->var->size, dst->var->size, X64_E2G);
+
+	} else {
+		assert(4 == src->var->size);
+		xor  = x64_find_OpCode(X64_XOR, 8, 8, X64_G2E);
+		inst = x64_make_inst_G2E(xor, rd, rd);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+
+		movx = x64_find_OpCode(X64_MOV, 4, 4, X64_E2G);
+	}
+
+	if (src->color > 0) {
+		X64_SELECT_REG_CHECK(&rs, src, c, f, 0);
+		inst = x64_make_inst_E2G(movx, rd, rs);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+
+	} else if (0 == src->color) {
+		// get the rd's low bits register
+		rs   = x64_find_register_color_bytes(rd->color, src->var->size);
+
+		mov  = x64_find_OpCode(X64_MOV, src->var->size, src->var->size, X64_I2G);
+		inst = x64_make_inst_I2G(mov, rs, (uint8_t*)&src->var->data, src->var->size);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+
+		inst = x64_make_inst_E2G(movx, rd, rs);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+
+	} else {
+		rela_t* rela = NULL;
+
+		inst = x64_make_inst_M2G(&rela, movx, rd, NULL, src->var);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+		X64_RELA_ADD_CHECK(f->data_relas, rela, c, src->var, NULL);
+	}
+
+	return 0;
+}
+
+int x64_inst_float_cast(dag_node_t* dst, dag_node_t* src, _3ac_code_t* c, function_t* f)
+{
+	x64_OpCode_t*   OpCode;
+
+	instruction_t*  inst;
+	register_t*     rs = NULL;
+	register_t*     rd = NULL;
+
+	X64_SELECT_REG_CHECK(&rd, dst, c, f, 0);
+
+	int OpCode_type;
+	if (variable_float(dst->var)) {
+
+		if (variable_float(src->var)) {
+
+			if (VAR_FLOAT == src->var->type)
+				OpCode_type = X64_CVTSS2SD;
+			else
+				OpCode_type = X64_CVTSD2SS;
+
+		} else {
+			if (VAR_FLOAT == dst->var->type)
+				OpCode_type = X64_CVTSI2SS;
+			else
+				OpCode_type = X64_CVTSI2SD;
+		}
+	} else {
+		if (VAR_FLOAT == src->var->type)
+			OpCode_type = X64_CVTTSS2SI;
+		else
+			OpCode_type = X64_CVTTSD2SI;
+	}
+
+	OpCode = x64_find_OpCode(OpCode_type, src->var->size, dst->var->size, X64_E2G);
+	if (!OpCode) {
+		loge("OpCode_type: %d, size: %d->%d\n", OpCode_type, src->var->size, dst->var->size);
+		return -EINVAL;
+	}
+
+	if (0 == src->color) {
+		src->color = -1;
+		src->var->global_flag = 1;
+
+		X64_SELECT_REG_CHECK(&rs, src, c, f, 1);
+
+		inst   = x64_make_inst_E2G(OpCode, rd, rs);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+
+	} else if (src->color > 0) {
+		X64_SELECT_REG_CHECK(&rs, src, c, f, 1);
+		inst = x64_make_inst_E2G(OpCode, rd, rs);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+
+	} else {
+		rela_t* rela = NULL;
+
+		inst   = x64_make_inst_M2G(&rela, OpCode, rd, NULL, src->var);
+		X64_INST_ADD_CHECK(c->instructions, inst);
+		X64_RELA_ADD_CHECK(f->data_relas, rela, c, src->var, NULL);
+	}
+
+	return 0;
+}
+
+int x64_inst_jmp(native_t* ctx, _3ac_code_t* c, int OpCode_type)
+{
+	if (!c->dsts || c->dsts->size != 1)
+		return -EINVAL;
+
+	_3ac_operand_t* dst = c->dsts->data[0];
+
+	if (!dst->bb)
+		return -EINVAL;
+
+	if (!c->instructions) {
+		c->instructions = vector_alloc();
+		if (!c->instructions)
+			return -ENOMEM;
+	}
+
+	uint32_t offset = 0;
+
+	x64_OpCode_t*  jcc  = x64_find_OpCode(OpCode_type, 4,4, X64_I);
+
+	instruction_t* inst = x64_make_inst_I(jcc, (uint8_t*)&offset, sizeof(offset));
+
+	X64_INST_ADD_CHECK(c->instructions, inst);
+	return 0;
+}
+

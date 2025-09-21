@@ -1,0 +1,530 @@
+#include"risc.h"
+#include"elf.h"
+#include"basic_block.h"
+#include"3ac.h"
+
+void risc_init_bb_colors(basic_block_t* bb, function_t* f)
+{
+	dag_node_t*   dn;
+	dn_status_t*  ds;
+	variable_t*   v;
+	register_t*   r;
+
+	f->rops->registers_reset();
+
+	int i;
+	for (i = 0; i < bb->dn_colors_entry->size; i++) {
+		ds =        bb->dn_colors_entry->data[i];
+
+		dn         = ds->dag_node;
+		dn->color  = ds->color;
+		dn->loaded = 0;
+
+		if (0 == bb->index && dn->rabi)
+			dn->loaded = 1;
+
+		if (vector_find(bb->dn_loads, dn)) {
+
+			v = dn->var;
+			if (v->w)
+				loge("v_%d_%d/%s, ", v->w->line, v->w->pos, v->w->text->data);
+			else
+				loge("v_%#lx, ", 0xffff & (uintptr_t)v);
+
+			printf("color: %ld, loaded: %d", dn->color, dn->loaded);
+
+			if (dn->color > 0) {
+				r = f->rops->find_register_color(dn->color);
+				printf(", reg: %s", r->name);
+			}
+			printf("\n");
+		}
+	}
+}
+
+int risc_save_bb_colors(vector_t* dn_colors, bb_group_t* bbg, basic_block_t* bb)
+{
+	dag_node_t*   dn;
+	dn_status_t*  ds0;
+	dn_status_t*  ds1;
+
+	int i;
+	int j;
+
+	for (i  = 0; i < bbg->pre->dn_colors_entry->size; i++) {
+
+		ds0 = bbg->pre->dn_colors_entry->data[i];
+		dn  = ds0->dag_node;
+
+		for (j  = 0; j < dn_colors->size; j++) {
+			ds1 =        dn_colors->data[j];
+
+			if (ds1->dag_node == dn)
+				break;
+		}
+
+		if (j == dn_colors->size) {
+			ds1 = dn_status_alloc(dn);
+			if (!ds1)
+				return -ENOMEM;
+
+			int ret = vector_add(dn_colors, ds1);
+			if (ret < 0) {
+				dn_status_free(ds1);
+				return ret;
+			}
+		}
+
+		ds1->color  = dn->color;
+		ds1->loaded = dn->loaded;
+#if 0
+		variable_t* v = dn->var;
+		if (v->w)
+			loge("bb: %d, v_%d_%d/%s, ", bb->index, v->w->line, v->w->pos, v->w->text->data);
+		else
+			loge("bb: %d, v_%#lx, ", bb->index, 0xffff & (uintptr_t)v);
+		printf("dn->color: %ld, dn->loaded: %d\n", dn->color, dn->loaded);
+#endif
+	}
+
+	return 0;
+}
+
+intptr_t risc_bb_find_color(vector_t* dn_colors, dag_node_t* dn)
+{
+	dn_status_t* ds = NULL;
+
+	int j;
+	for (j = 0; j < dn_colors->size; j++) {
+		ds =        dn_colors->data[j];
+
+		if (ds->dag_node == dn)
+			break;
+	}
+	assert(j < dn_colors->size);
+
+	return ds->color;
+}
+
+int risc_bb_load_dn(intptr_t color, dag_node_t* dn, _3ac_code_t* c, basic_block_t* bb, function_t* f)
+{
+	variable_t*     v = dn->var;
+	register_t* r;
+	instruction_t*  inst;
+
+	int inst_bytes;
+	int ret;
+	int i;
+
+	if (!c->instructions) {
+		c->instructions = vector_alloc();
+		if (!c->instructions)
+			return -ENOMEM;
+	}
+
+	dn->loaded = 0;
+
+	r   = f->rops->find_register_color(color);
+
+	ret = risc_load_reg(r, dn, c, f);
+	if (ret < 0) {
+		loge("\n");
+		return ret;
+	}
+
+	logd("add load: v_%d_%d/%s, color: %ld, r: %s\n",
+			v->w->line, v->w->pos, v->w->text->data, color, r->name);
+	return 0;
+}
+
+int risc_bb_save_dn(intptr_t color, dag_node_t* dn, _3ac_code_t* c, basic_block_t* bb, function_t* f)
+{
+	variable_t*     v = dn->var;
+	register_t* r;
+	instruction_t*  inst;
+
+	int inst_bytes;
+	int ret;
+	int i;
+
+	logd("add save: v_%d_%d/%s, color: %ld\n",
+			v->w->line, v->w->pos, v->w->text->data, color);
+
+	if (!c->instructions) {
+		c->instructions = vector_alloc();
+		if (!c->instructions)
+			return -ENOMEM;
+	}
+
+	r   = f->rops->find_register_color(color);
+
+	ret = risc_save_var2(dn, r, c, f);
+	if (ret < 0) {
+		loge("\n");
+		return ret;
+	}
+
+	return 0;
+}
+
+int risc_bb_load_dn2(intptr_t color, dag_node_t* dn, basic_block_t* bb, function_t* f)
+{
+	register_t*      r0;
+	instruction_t*   cmp = NULL;
+	instruction_t*   inst;
+	_3ac_code_t*      c;
+	list_t*          l;
+
+	variable_t* v = dn->var;
+	if (v->w)
+		logd("bb: %d, v: %d/%s, bp_offset: -%#x\n", bb->index, v->w->line, v->w->text->data, -v->bp_offset);
+
+	uint32_t opcode;
+	uint32_t mov;
+	uint32_t i0;
+	uint32_t i1;
+
+	l = list_tail(&bb->code_list_head);
+	c = list_data(l, _3ac_code_t, list);
+
+	if (bb->cmp_flag) {
+
+		cmp = c->instructions->data[c->instructions->size - 1];
+		c->instructions->size--;
+
+		int ret = f->iops->cmp_update(c, f, cmp);
+		if (ret < 0) {
+			loge("\n");
+			return ret;
+		}
+	}
+
+	int ret = risc_bb_load_dn(color, dn, c, bb, f);
+	if (ret < 0)
+		return ret;
+
+	if (cmp)
+		RISC_INST_ADD_CHECK(c->instructions, cmp);
+
+	return 0;
+}
+
+int risc_bb_save_dn2(intptr_t color, dag_node_t* dn, basic_block_t* bb, function_t* f)
+{
+	_3ac_operand_t* src;
+	_3ac_code_t*    c;
+	list_t*        l;
+
+	for (l = list_head(&bb->save_list_head); l != list_sentinel(&bb->save_list_head); ) {
+
+		c  = list_data(l, _3ac_code_t, list);
+		l  = list_next(l);
+
+		assert(1 == c->srcs->size);
+
+		src = c->srcs->data[0];
+
+		if (src->dag_node == dn) {
+
+			if (risc_bb_save_dn(color, dn, c, bb, f) < 0) {
+				loge("\n");
+				return -1;
+			}
+
+			list_del(&c->list);
+			list_add_tail(&bb->code_list_head, &c->list);
+			break;
+		}
+	}
+
+	return 0;
+}
+
+int risc_load_bb_colors(basic_block_t* bb, bb_group_t* bbg, function_t* f)
+{
+	basic_block_t* prev;
+	dn_status_t*   ds;
+	dn_status_t*   ds2;
+	dag_node_t*    dn;
+	variable_t*    v;
+
+	int i;
+	int j;
+	int k;
+
+	if (risc_save_bb_colors(bb->dn_colors_entry, bbg, bb) < 0) {
+		loge("\n");
+		return -1;
+	}
+
+	for (i = 0; i < bb->dn_colors_entry->size; i++) {
+		ds =        bb->dn_colors_entry->data[i];
+
+		dn = ds->dag_node;
+
+		intptr_t color = dn->color;
+		int      first = 0;
+
+		for (j = 0; j < bb->prevs->size; j++) {
+			prev      = bb->prevs->data[j];
+
+			if (prev->index > bb->index)
+				continue;
+
+			for (k = 0; k < prev->dn_colors_exit->size; k++) {
+				ds2       = prev->dn_colors_exit->data[k];
+
+				if (ds2->dag_node == dn)
+					break;
+			}
+
+			assert(k < prev->dn_colors_exit->size);
+
+			if (0 == first) {
+				first      = 1;
+				dn->color  = ds2->color;
+				dn->loaded = ds2->loaded;
+				continue;
+			}
+
+			if (dn->color != ds2->color)
+				break;
+		}
+
+		if (j < bb->prevs->size) {
+
+			for (j = 0; j < bb->prevs->size; j++) {
+				prev      = bb->prevs->data[j];
+
+				if (prev->index > bb->index)
+					continue;
+
+				for (k = 0; k < prev->dn_colors_exit->size; k++) {
+					ds2       = prev->dn_colors_exit->data[k];
+
+					if (ds2->dag_node == dn)
+						break;
+				}
+
+				assert(k < prev->dn_colors_exit->size);
+
+				if (risc_bb_save_dn2(ds2->color, dn, prev, f) < 0) {
+					loge("\n");
+					return -1;
+				}
+			}
+
+			dn->color  = -1;
+			dn->loaded =  0;
+		}
+
+		if (color != dn->color && color > 0) {
+			register_t* r = f->rops->find_register_color(color);
+
+			vector_del(r->dag_nodes, dn);
+		}
+	}
+#if 0
+	for (i = 0; i < bb->dn_colors_entry->size; i++) {
+		ds =        bb->dn_colors_entry->data[i];
+
+		dn = ds->dag_node;
+		v  = dn->var;
+
+		logw("j: %d, bb: %d, color: %ld, loaded: %d, ", j, bb->index, dn->color, dn->loaded);
+		if (v->w)
+			printf("v_%d/%s", v->w->line, v->w->text->data);
+		else
+			printf("v_%#lx", 0xffff & (uintptr_t)v);
+
+		if (dn->color > 0) {
+			register_t* r = f->rops->find_register_color(dn->color);
+
+			printf(", %s", r->name);
+		}
+		printf("\n");
+	}
+#endif
+
+	return 0;
+}
+
+int risc_fix_bb_colors(basic_block_t* bb, bb_group_t* bbg, function_t* f)
+{
+	basic_block_t* prev;
+	dn_status_t*   ds;
+	dn_status_t*   ds2;
+	dag_node_t*    dn;
+	variable_t*    v;
+
+	int i;
+	int j;
+	int k;
+
+	for (i = 0; i < bb->dn_colors_entry->size; i++) {
+		ds =        bb->dn_colors_entry->data[i];
+
+		dn = ds->dag_node;
+
+		for (j = 0; j < bb->prevs->size; j++) {
+			prev      = bb->prevs->data[j];
+
+			if (prev->index < bb->index)
+				continue;
+
+			assert(prev->back_flag);
+
+			for (k = 0; k < prev->dn_colors_exit->size; k++) {
+				ds2       = prev->dn_colors_exit->data[k];
+
+				if (ds2->dag_node == dn)
+					break;
+			}
+
+			assert(k < prev->dn_colors_exit->size);
+
+			v = dn->var;
+			if (v->w)
+				logd("bb: %d, prev: %d, v: %d/%s\n", bb->index, prev->index, v->w->line, v->w->text->data);
+
+			if (ds->color == ds2->color)
+				continue;
+
+			if (!vector_find(prev->exit_dn_actives, dn)
+					&& !vector_find(prev->exit_dn_aliases, dn))
+				continue;
+
+			if (ds2->color > 0) {
+				if (risc_bb_save_dn2(ds2->color, dn, prev, f) < 0) {
+					loge("\n");
+					return -1;
+				}
+			}
+
+			if (ds->color > 0) {
+				if (risc_bb_load_dn2(ds->color, dn, prev, f) < 0) {
+					loge("\n");
+					return -1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+int risc_load_bb_colors2(basic_block_t* bb, bb_group_t* bbg, function_t* f)
+{
+	basic_block_t*  prev;
+	dn_status_t*    ds;
+	dn_status_t*    ds2;
+	dag_node_t*     dn;
+	variable_t*     v;
+	register_t*     r;
+
+	int i;
+	int j;
+	int k;
+
+	if (risc_save_bb_colors(bb->dn_colors_entry, bbg, bb) < 0) {
+		loge("\n");
+		return -1;
+	}
+
+	for (i = 0; i < bb->dn_colors_entry->size; i++) {
+		ds =        bb->dn_colors_entry->data[i];
+
+		dn = ds->dag_node;
+
+		intptr_t color = dn->color;
+		int      first = 0;
+
+		for (j = 0; j < bb->prevs->size; j++) {
+			prev      = bb->prevs->data[j];
+
+			if (!vector_find(bbg->body, prev))
+				continue;
+
+			for (k = 0; k < prev->dn_colors_exit->size; k++) {
+				ds2       = prev->dn_colors_exit->data[k];
+
+				if (ds2->dag_node == dn)
+					break;
+			}
+
+			assert(k < prev->dn_colors_exit->size);
+
+			if (0 == first) {
+				first      = 1;
+				dn->color  = ds2->color;
+				dn->loaded = ds2->loaded;
+				continue;
+			}
+
+			if (dn->color != ds2->color)
+				break;
+		}
+
+		if (j < bb->prevs->size) {
+
+			for (j = 0; j < bb->prevs->size; j++) {
+				prev      = bb->prevs->data[j];
+
+				if (!vector_find(bbg->body, prev))
+					continue;
+
+				for (k = 0; k < prev->dn_colors_exit->size; k++) {
+					ds2       = prev->dn_colors_exit->data[k];
+
+					if (ds2->dag_node == dn)
+						break;
+				}
+
+				assert(k < prev->dn_colors_exit->size);
+
+				if (risc_bb_save_dn2(ds2->color, dn, prev, f) < 0) {
+					loge("\n");
+					return -1;
+				}
+			}
+
+			dn->color  = -1;
+			dn->loaded =  0;
+		}
+
+		if (color != dn->color && color > 0) {
+			r = f->rops->find_register_color(color);
+
+			vector_del(r->dag_nodes, dn);
+		}
+
+		if (dn->color < 0)
+			dn->loaded =  0;
+	}
+
+	for (i = 0; i < bb->dn_colors_entry->size; i++) {
+		ds =        bb->dn_colors_entry->data[i];
+
+		dn = ds->dag_node;
+		v  = dn->var;
+#if 0
+		logw("j: %d, bb: %d, color: %ld, loaded: %d, ", j, bb->index, dn->color, dn->loaded);
+		if (v->w)
+			printf("v_%d/%s", v->w->line, v->w->text->data);
+		else
+			printf("v_%#lx", 0xffff & (uintptr_t)v);
+#endif
+		if (dn->color > 0) {
+			r = f->rops->find_register_color(dn->color);
+
+			if (dn->loaded)
+				assert(0 == vector_add_unique(r->dag_nodes, dn));
+			else
+				vector_del(r->dag_nodes, dn);
+			//	printf(", %s", r->name);
+		}
+		//printf("\n");
+	}
+	return 0;
+}
+

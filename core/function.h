@@ -40,7 +40,7 @@ struct function_s
 
     Efunction* ef;
 
-    str_3ac_code_t* init_code;
+    _3ac_code_t* init_code;
     int init_code_bytes;
 
     int callee_saved_size;

@@ -1,0 +1,126 @@
+syntax="proto2";
+
+message scf_line
+{
+	required int32 x0 = 1;
+	required int32 y0 = 2;
+	required int32 x1 = 3;
+	required int32 y1 = 4;
+}
+
+message scf_epin
+{
+	required uint64    id    = 1;
+	required uint64    cid   = 2;
+	required uint64    lid   = 3;
+	required uint64    flags = 4;
+	repeated uint64    tos   = 5;
+	required uint64    c_lid = 6;
+
+	required double    v     = 7;
+	required double    jv    = 8;
+	required double    a     = 9;
+	required double    ja    = 10;
+
+	required double    r     = 11;
+	required double    jr    = 12;
+	required double    uF    = 13;
+	required double    uH    = 14;
+	required double    hfe   = 15;
+
+	required double    dr    = 16;
+	required double    jdr   = 17;
+
+	required double    sr    = 18;
+	required double    jsr   = 19;
+
+	required double    pr    = 20;
+	required double    jpr   = 21;
+
+	required uint64    path  = 22;
+
+	required int32     x     = 23;
+	required int32     y     = 24;
+
+	required int32     n_diodes = 25;
+	required int32     l_pos = 26;
+
+	required bool      vflag = 27;
+	required bool      pflag = 28;
+
+	required bool      vconst = 29;
+	required bool      aconst = 30;
+}
+
+message scf_econn
+{
+	required uint64    lid   = 1;
+	repeated uint64    cids  = 2;
+}
+
+message scf_eline
+{
+	required uint64    id     = 1;
+	repeated uint64    pins   = 2;
+	required uint64    c_pins = 3;
+	required uint64    flags  = 4;
+	required int64     color  = 5;
+
+	repeated scf_econn conns  = 6;
+	repeated scf_line  lines  = 7;
+
+	required double    v      = 8;
+	required double    jv     = 9;
+	required double    a      = 10;
+	required double    ja     = 11;
+	required bool      vconst = 12;
+	required bool      aconst = 13;
+
+	required bool      vflag  = 14;
+}
+
+message scf_ecomponent
+{
+	required uint64    id     = 1;
+	required uint64    type   = 2;
+	required uint64    model  = 3;
+	repeated scf_epin  pins   = 4;
+
+	required double    v      = 5;
+	required double    jv     = 6;
+	required double    a      = 7;
+	required double    ja     = 8;
+
+	required double    r      = 9;
+	required double    jr     = 10;
+	required double    uF     = 11;
+	required double    uH     = 12;
+
+	required int64     color  = 13;
+	required int32     status = 14;
+
+	required int32     x      = 15;
+	required int32     y      = 16;
+	required int32     w      = 17;
+	required int32     h      = 18;
+
+	required bool      vflag  = 19;
+	required bool      lock   = 20;
+}
+
+message scf_efunction
+{
+	required string         name       = 1;
+	repeated scf_ecomponent components = 2;
+	repeated scf_eline      elines     = 3;
+
+	required int32    x    = 4;
+	required int32    y    = 5;
+	required int32    w    = 6;
+	required int32    h    = 7;
+}
+
+message scf_eboard
+{
+	repeated scf_efunction functions = 1;
+}

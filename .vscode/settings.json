@@ -14,6 +14,18 @@
         "utils_vector.h": "c",
         "parse.h": "c",
         "list": "c",
-        "functional": "c"
+        "functional": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "string.h": "c",
+        "dwarf_def.h": "c",
+        "elf.h": "c",
+        "leb128.h": "c",
+        "dwarf.h": "c",
+        "elf_link.h": "c",
+        "elf_arm64.h": "c",
+        "ar.h": "c"
     }
 }

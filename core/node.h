@@ -1,7 +1,7 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "string.h"
+#include "utils_string.h"
 #include "utils_list.h"
 #include "utils_vector.h"
 #include "utils_graph.h"
