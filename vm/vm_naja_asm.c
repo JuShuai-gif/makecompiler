@@ -1,8 +1,8 @@
-#include"scf_vm.h"
+#include"vm.h"
 
-static int __naja_add(scf_vm_t* vm, uint32_t inst)
+static int __naja_add(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -31,9 +31,9 @@ static int __naja_add(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_sub(scf_vm_t* vm, uint32_t inst)
+static int __naja_sub(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -77,9 +77,9 @@ static int __naja_sub(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_mul(scf_vm_t* vm, uint32_t inst)
+static int __naja_mul(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -107,9 +107,9 @@ static int __naja_mul(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_div(scf_vm_t* vm, uint32_t inst)
+static int __naja_div(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -137,9 +137,9 @@ static int __naja_div(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_ldr_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_ldr_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -180,9 +180,9 @@ static int __naja_ldr_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_pop(scf_vm_t* vm, uint32_t inst)
+static int __naja_pop(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -219,9 +219,9 @@ static int __naja_pop(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_ldr_sib(scf_vm_t* vm, uint32_t inst)
+static int __naja_ldr_sib(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int ri  = (inst >>  5) & 0x1f;
@@ -260,9 +260,9 @@ static int __naja_ldr_sib(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_str_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_str_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -293,9 +293,9 @@ static int __naja_str_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_push(scf_vm_t* vm, uint32_t inst)
+static int __naja_push(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -322,9 +322,9 @@ static int __naja_push(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_str_sib(scf_vm_t* vm, uint32_t inst)
+static int __naja_str_sib(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int ri  = (inst >>  5) & 0x1f;
@@ -353,9 +353,9 @@ static int __naja_str_sib(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_and(scf_vm_t* vm, uint32_t inst)
+static int __naja_and(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -399,9 +399,9 @@ static int __naja_and(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_or(scf_vm_t* vm, uint32_t inst)
+static int __naja_or(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -426,9 +426,9 @@ static int __naja_or(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_jmp_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_jmp_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int simm26 = inst & 0x3ffffff;
 
@@ -440,9 +440,9 @@ static int __naja_jmp_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_call_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_call_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int simm26 = inst & 0x3ffffff;
 
@@ -454,9 +454,9 @@ static int __naja_call_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_jmp_reg(scf_vm_t* vm, uint32_t inst)
+static int __naja_jmp_reg(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	if (inst & 0x1) {
 
@@ -488,7 +488,7 @@ static int __naja_jmp_reg(scf_vm_t* vm, uint32_t inst)
 		else if (5 == cc)
 			printf("jlt      %#lx\n", ip);
 		else {
-			scf_loge("\n");
+			loge("\n");
 			return -EINVAL;
 		}
 
@@ -500,9 +500,9 @@ static int __naja_jmp_reg(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_call_reg(scf_vm_t* vm, uint32_t inst)
+static int __naja_call_reg(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rd = (inst >> 21) & 0x1f;
 
@@ -511,9 +511,9 @@ static int __naja_call_reg(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_adrp(scf_vm_t* vm, uint32_t inst)
+static int __naja_adrp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rd  = (inst >> 21) & 0x1f;
 	int s21 =  inst & 0x1fffff;
@@ -526,49 +526,49 @@ static int __naja_adrp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_ret(scf_vm_t* vm, uint32_t inst)
+static int __naja_ret(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	printf("ret\n");
 	return 0;
 }
 
-static int __naja_setcc(scf_vm_t* vm, uint32_t inst)
+static int __naja_setcc(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rd = (inst >> 21) & 0x1f;
 	int cc = (inst >>  1) & 0xf;
 
-	if (SCF_VM_Z == cc)
+	if (VM_Z == cc)
 		printf("setz     r%d\n", rd);
 
-	else if (SCF_VM_NZ == cc)
+	else if (VM_NZ == cc)
 		printf("setnz    r%d\n", rd);
 
-	else if (SCF_VM_GE == cc)
+	else if (VM_GE == cc)
 		printf("setge    r%d\n", rd);
 
-	else if (SCF_VM_GT == cc)
+	else if (VM_GT == cc)
 		printf("setgt    r%d\n", rd);
 
-	else if (SCF_VM_LT == cc)
+	else if (VM_LT == cc)
 		printf("setlt    r%d\n", rd);
 
-	else if (SCF_VM_LE == cc)
+	else if (VM_LE == cc)
 		printf("setle    r%d\n", rd);
 	else {
-		scf_loge("inst: %#x\n", inst);
+		loge("inst: %#x\n", inst);
 		return -EINVAL;
 	}
 
 	return 0;
 }
 
-static int __naja_mov(scf_vm_t* vm, uint32_t inst)
+static int __naja_mov(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rd  = (inst >> 21) & 0x1f;
 	int SH  = (inst >> 19) & 0x3;
@@ -649,9 +649,9 @@ static int __naja_mov(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fadd(scf_vm_t* vm, uint32_t inst)
+static int __naja_fadd(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -661,9 +661,9 @@ static int __naja_fadd(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fsub(scf_vm_t* vm, uint32_t inst)
+static int __naja_fsub(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -677,9 +677,9 @@ static int __naja_fsub(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fmul(scf_vm_t* vm, uint32_t inst)
+static int __naja_fmul(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -697,9 +697,9 @@ static int __naja_fmul(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fdiv(scf_vm_t* vm, uint32_t inst)
+static int __naja_fdiv(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -717,9 +717,9 @@ static int __naja_fdiv(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fstr_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_fstr_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -738,7 +738,7 @@ static int __naja_fstr_disp(scf_vm_t* vm, uint32_t inst)
 			printf("fstr     d%d, [r%d, %d]\n", rd, rb, s13 << 3);
 			break;
 		default:
-			scf_loge("SH: %d\n", SH);
+			loge("SH: %d\n", SH);
 			return -1;
 			break;
 	};
@@ -746,9 +746,9 @@ static int __naja_fstr_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fpush(scf_vm_t* vm, uint32_t inst)
+static int __naja_fpush(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -763,7 +763,7 @@ static int __naja_fpush(scf_vm_t* vm, uint32_t inst)
 			printf("fpush    d%d, [r%d]\n", rd, rb);
 			break;
 		default:
-			scf_loge("SH: %d\n", SH);
+			loge("SH: %d\n", SH);
 			return -1;
 			break;
 	};
@@ -771,9 +771,9 @@ static int __naja_fpush(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fldr_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_fldr_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -792,7 +792,7 @@ static int __naja_fldr_disp(scf_vm_t* vm, uint32_t inst)
 			printf("fldr     d%d, [r%d, %d]\n", rd, rb, s13 << 3);
 			break;
 		default:
-			scf_loge("SH: %d\n", SH);
+			loge("SH: %d\n", SH);
 			return -1;
 			break;
 	};
@@ -800,9 +800,9 @@ static int __naja_fldr_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fpop(scf_vm_t* vm, uint32_t inst)
+static int __naja_fpop(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -816,7 +816,7 @@ static int __naja_fpop(scf_vm_t* vm, uint32_t inst)
 			printf("fldr    d%d, [r%d]\n", rd, rb);
 			break;
 		default:
-			scf_loge("SH: %d\n", SH);
+			loge("SH: %d\n", SH);
 			return -1;
 			break;
 	};
@@ -824,9 +824,9 @@ static int __naja_fpop(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fldr_sib(scf_vm_t* vm, uint32_t inst)
+static int __naja_fldr_sib(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int ri  = (inst >>  5) & 0x1f;
@@ -842,7 +842,7 @@ static int __naja_fldr_sib(scf_vm_t* vm, uint32_t inst)
 			printf("fldr  d%d, [r%d, r%d, %d]\n", rd, rb, ri, u8);
 			break;
 		default:
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 			break;
 	};
@@ -850,9 +850,9 @@ static int __naja_fldr_sib(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fstr_sib(scf_vm_t* vm, uint32_t inst)
+static int __naja_fstr_sib(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int ri  = (inst >>  5) & 0x1f;
@@ -868,7 +868,7 @@ static int __naja_fstr_sib(scf_vm_t* vm, uint32_t inst)
 			printf("fstr  d%d, [r%d, r%d, %d]\n", rd, rb, ri, u8);
 			break;
 		default:
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 			break;
 	};
@@ -876,9 +876,9 @@ static int __naja_fstr_sib(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fmov(scf_vm_t* vm, uint32_t inst)
+static int __naja_fmov(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs  =  inst & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -892,7 +892,7 @@ static int __naja_fmov(scf_vm_t* vm, uint32_t inst)
 		else if (3 == SH)
 			printf("fsd2ss   f%d, d%d\n", rd, rs);
 		else {
-			scf_loge("\n");
+			loge("\n");
 			return -EINVAL;
 		}
 
@@ -993,15 +993,15 @@ static naja_opcode_pt  naja_opcodes[64] =
 	NULL,            // 63
 };
 
-static int __naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
+static int __naja_vm_run(vm_t* vm, const char* path, const char* sys)
 {
-	scf_elf_sym_t* s;
-	scf_vm_naja_t* naja = vm->priv;
-	scf_vector_t*  syms = scf_vector_alloc();
+	elf_sym_t* s;
+	vm_naja_t* naja = vm->priv;
+	vector_t*  syms = vector_alloc();
 	if (!syms)
 		return -ENOMEM;
 
-	int ret = scf_elf_read_syms(vm->elf, syms, ".symtab");
+	int ret = elf_read_syms(vm->elf, syms, ".symtab");
 	if (ret < 0)
 		return ret;
 
@@ -1026,7 +1026,7 @@ static int __naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
 			naja_opcode_pt pt = naja_opcodes[(inst >> 26) & 0x3f];
 
 			if (!pt) {
-				scf_loge("inst: %d, %#x\n", (inst >> 26) & 0x3f, inst);
+				loge("inst: %d, %#x\n", (inst >> 26) & 0x3f, inst);
 				continue;
 			}
 
@@ -1036,7 +1036,7 @@ static int __naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
 
 			ret = pt(vm, inst);
 			if (ret < 0) {
-				scf_loge("\n");
+				loge("\n");
 				return ret;
 			}
 		}
@@ -1045,18 +1045,18 @@ static int __naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
 	return 0;
 }
 
-static int naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
+static int naja_vm_run(vm_t* vm, const char* path, const char* sys)
 {
 	int ret = naja_vm_init(vm, path, sys);
 	if (ret < 0) {
-		scf_loge("\n");
+		loge("\n");
 		return ret;
 	}
 
 	return __naja_vm_run(vm, path, sys);
 }
 
-scf_vm_ops_t  vm_ops_naja_asm =
+vm_ops_t  vm_ops_naja_asm =
 {
 	.name  = "naja_asm",
 	.open  = naja_vm_open,

@@ -1,4 +1,4 @@
-#include"scf_vm.h"
+#include"vm.h"
 
 static const char* somaps[][3] =
 {
@@ -23,12 +23,12 @@ typedef int (*dyn_func_pt)(uint64_t r0,
 		double   d6,
 		double   d7);
 
-int naja_vm_open(scf_vm_t* vm)
+int naja_vm_open(vm_t* vm)
 {
 	if (!vm)
 		return -EINVAL;
 
-	scf_vm_naja_t* naja = calloc(1, sizeof(scf_vm_naja_t));
+	vm_naja_t* naja = calloc(1, sizeof(vm_naja_t));
 	if (!naja)
 		return -ENOMEM;
 
@@ -36,7 +36,7 @@ int naja_vm_open(scf_vm_t* vm)
 	return 0;
 }
 
-int naja_vm_close(scf_vm_t* vm)
+int naja_vm_close(vm_t* vm)
 {
 	if (vm) {
 		if (vm->priv) {
@@ -48,9 +48,9 @@ int naja_vm_close(scf_vm_t* vm)
 	return 0;
 }
 
-static int naja_vm_dynamic_link(scf_vm_t* vm)
+static int naja_vm_dynamic_link(vm_t* vm)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 	dyn_func_pt    f    = NULL;
 
 	int64_t  sp = naja->regs[NAJA_REG_SP];
@@ -58,14 +58,14 @@ static int naja_vm_dynamic_link(scf_vm_t* vm)
 	uint64_t lr  = *(uint64_t*)(naja->stack - (sp +  8));
 	uint64_t r16 = *(uint64_t*)(naja->stack - (sp + 16));
 
-	scf_logw("sp: %ld, r16: %#lx, lr: %#lx, vm->jmprel_size: %ld\n", sp, r16, lr, vm->jmprel_size);
+	logw("sp: %ld, r16: %#lx, lr: %#lx, vm->jmprel_size: %ld\n", sp, r16, lr, vm->jmprel_size);
 
 	if (r16  > (uint64_t)vm->data->data) {
 		r16 -= (uint64_t)vm->data->data;
 		r16 +=           vm->data->addr;
 	}
 
-	scf_logw("r16: %#lx, text: %p, rodata: %p, data: %p\n", r16, vm->text->data, vm->rodata->data, vm->data->data);
+	logw("r16: %#lx, text: %p, rodata: %p, data: %p\n", r16, vm->text->data, vm->rodata->data, vm->data->data);
 
 	int i;
 	for (i = 0; i < vm->jmprel_size / sizeof(Elf64_Rela); i++) {
@@ -75,7 +75,7 @@ static int naja_vm_dynamic_link(scf_vm_t* vm)
 			int   j     = ELF64_R_SYM(vm->jmprel[i].r_info);
 			char* fname = vm->dynstr + vm->dynsym[j].st_name;
 
-			scf_logw("j: %d, %s\n", j, fname);
+			logw("j: %d, %s\n", j, fname);
 
 			int k;
 			for (k = 0; k < vm->sofiles->size; k++) {
@@ -89,11 +89,11 @@ static int naja_vm_dynamic_link(scf_vm_t* vm)
 				int64_t offset = vm->jmprel[i].r_offset - vm->data->addr;
 
 				if (offset < 0 || offset > vm->data->len) {
-					scf_loge("\n");
+					loge("\n");
 					return -1;
 				}
 
-				scf_logw("f: %p\n", f);
+				logw("f: %p\n", f);
 
 				*(void**)(vm->data->data + offset) = f;
 
@@ -124,51 +124,51 @@ static int naja_vm_dynamic_link(scf_vm_t* vm)
 	return -1;
 }
 
-int naja_vm_init(scf_vm_t* vm, const char* path, const char* sys)
+int naja_vm_init(vm_t* vm, const char* path, const char* sys)
 {
 	if (!vm || !path)
 		return -EINVAL;
 
 	if (vm->elf)
-		scf_vm_clear(vm);
+		vm_clear(vm);
 
 	if (vm->priv)
-		memset(vm->priv, 0, sizeof(scf_vm_naja_t));
+		memset(vm->priv, 0, sizeof(vm_naja_t));
 	else {
-		vm->priv = calloc(1, sizeof(scf_vm_naja_t));
+		vm->priv = calloc(1, sizeof(vm_naja_t));
 		if (!vm->priv)
 			return -ENOMEM;
 	}
 
 	if (vm->phdrs)
-		scf_vector_clear(vm->phdrs, (void (*)(void*) )free);
+		vector_clear(vm->phdrs, (void (*)(void*) )free);
 	else {
-		vm->phdrs = scf_vector_alloc();
+		vm->phdrs = vector_alloc();
 		if (!vm->phdrs)
 			return -ENOMEM;
 	}
 
 	if (vm->sofiles)
-		scf_vector_clear(vm->phdrs, (void (*)(void*) )dlclose);
+		vector_clear(vm->phdrs, (void (*)(void*) )dlclose);
 	else {
-		vm->sofiles = scf_vector_alloc();
+		vm->sofiles = vector_alloc();
 		if (!vm->sofiles)
 			return -ENOMEM;
 	}
 
-	int ret = scf_elf_open(&vm->elf, "naja", path, "rb");
+	int ret = elf_open(&vm->elf, "naja", path, "rb");
 	if (ret < 0) {
-		scf_loge("\n");
+		loge("\n");
 		return ret;
 	}
 
-	ret = scf_elf_read_phdrs(vm->elf, vm->phdrs);
+	ret = elf_read_phdrs(vm->elf, vm->phdrs);
 	if (ret < 0) {
-		scf_loge("\n");
+		loge("\n");
 		return ret;
 	}
 
-	scf_elf_phdr_t* ph;
+	elf_phdr_t* ph;
 	int i;
 	for (i = 0; i < vm->phdrs->size; i++) {
 		ph =        vm->phdrs->data[i];
@@ -186,13 +186,13 @@ int naja_vm_init(scf_vm_t* vm, const char* path, const char* sys)
 
 			ret = fread(ph->data, ph->len, 1, vm->elf->fp);
 			if (1 != ret) {
-				scf_loge("\n");
+				loge("\n");
 				return -1;
 			}
 
-			scf_logi("i: %d, ph->p_offset: %#lx, ph->p_filesz: %#lx\n", i, ph->ph.p_offset, ph->ph.p_filesz);
+			logi("i: %d, ph->p_offset: %#lx, ph->p_filesz: %#lx\n", i, ph->ph.p_offset, ph->ph.p_filesz);
 
-			scf_logi("i: %d, ph->addr: %#lx, ph->len: %#lx, %#lx, ph->flags: %#x\n", i, ph->addr, ph->len, ph->ph.p_memsz, ph->ph.p_flags);
+			logi("i: %d, ph->addr: %#lx, ph->len: %#lx, %#lx, ph->flags: %#x\n", i, ph->addr, ph->len, ph->ph.p_memsz, ph->ph.p_flags);
 
 			if ((PF_X | PF_R) == ph->ph.p_flags)
 				vm->text   =  ph;
@@ -203,7 +203,7 @@ int naja_vm_init(scf_vm_t* vm, const char* path, const char* sys)
 			else if (PF_R == ph->ph.p_flags)
 				vm->rodata =  ph;
 			else {
-				scf_loge("\n");
+				loge("\n");
 				return -1;
 			}
 
@@ -213,11 +213,11 @@ int naja_vm_init(scf_vm_t* vm, const char* path, const char* sys)
 
 			vm->dynamic = ph;
 
-			scf_logi("ph->addr: %#lx, ph->len: %#lx, %#lx, ph->p_offset: %#lx\n", ph->addr, ph->len, ph->ph.p_memsz, ph->ph.p_offset);
+			logi("ph->addr: %#lx, ph->len: %#lx, %#lx, ph->p_offset: %#lx\n", ph->addr, ph->len, ph->ph.p_memsz, ph->ph.p_offset);
 		}
 	}
 
-	scf_logi("\n\n");
+	logi("\n\n");
 
 	if (vm->dynamic) {
 		Elf64_Dyn* d = (Elf64_Dyn*)(vm->data->data + vm->dynamic->ph.p_offset);
@@ -228,23 +228,23 @@ int naja_vm_init(scf_vm_t* vm, const char* path, const char* sys)
 			switch (d[i].d_tag) {
 
 				case DT_STRTAB:
-					scf_logi("dynstr: %#lx\n", d[i].d_un.d_ptr);
+					logi("dynstr: %#lx\n", d[i].d_un.d_ptr);
 					vm->dynstr = d[i].d_un.d_ptr - vm->text->addr + vm->text->data;
 					break;
 
 				case DT_SYMTAB:
-					scf_logi("dynsym: %#lx\n", d[i].d_un.d_ptr);
+					logi("dynsym: %#lx\n", d[i].d_un.d_ptr);
 					vm->dynsym = (Elf64_Sym*)(d[i].d_un.d_ptr - vm->text->addr + vm->text->data);
 					break;
 
 				case DT_JMPREL:
-					scf_logi("JMPREL: %#lx\n", d[i].d_un.d_ptr);
+					logi("JMPREL: %#lx\n", d[i].d_un.d_ptr);
 					vm->jmprel      = (Elf64_Rela*)(d[i].d_un.d_ptr - vm->text->addr + vm->text->data);
 					vm->jmprel_addr = d[i].d_un.d_ptr;
 					break;
 
 				case DT_PLTGOT:
-					scf_logi("PLTGOT: %#lx\n", d[i].d_un.d_ptr);
+					logi("PLTGOT: %#lx\n", d[i].d_un.d_ptr);
 					vm->pltgot = (uint64_t*)(d[i].d_un.d_ptr - vm->data->addr + vm->data->data);
 					break;
 
@@ -269,15 +269,15 @@ int naja_vm_init(scf_vm_t* vm, const char* path, const char* sys)
 					}
 				}
 
-				scf_logi("needed: %s\n", name);
+				logi("needed: %s\n", name);
 
 				void* so = dlopen(name, RTLD_LAZY);
 				if (!so) {
-					scf_loge("dlopen error, so: %s\n", name);
+					loge("dlopen error, so: %s\n", name);
 					return -1;
 				}
 
-				if (scf_vector_add(vm->sofiles, so) < 0) {
+				if (vector_add(vm->sofiles, so) < 0) {
 					dlclose(so);
 					return -ENOMEM;
 				}
@@ -290,9 +290,9 @@ int naja_vm_init(scf_vm_t* vm, const char* path, const char* sys)
 	return 0;
 }
 
-static int __naja_add(scf_vm_t* vm, uint32_t inst)
+static int __naja_add(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -332,9 +332,9 @@ static int __naja_add(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fadd(scf_vm_t* vm, uint32_t inst)
+static int __naja_fadd(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -348,9 +348,9 @@ static int __naja_fadd(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fsub(scf_vm_t* vm, uint32_t inst)
+static int __naja_fsub(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -376,9 +376,9 @@ static int __naja_fsub(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_sub(scf_vm_t* vm, uint32_t inst)
+static int __naja_sub(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -429,9 +429,9 @@ static int __naja_sub(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_mul(scf_vm_t* vm, uint32_t inst)
+static int __naja_mul(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -464,9 +464,9 @@ static int __naja_mul(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fmul(scf_vm_t* vm, uint32_t inst)
+static int __naja_fmul(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -492,9 +492,9 @@ static int __naja_fmul(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fdiv(scf_vm_t* vm, uint32_t inst)
+static int __naja_fdiv(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -520,9 +520,9 @@ static int __naja_fdiv(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_div(scf_vm_t* vm, uint32_t inst)
+static int __naja_div(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rs1 = (inst >>  5) & 0x1f;
@@ -556,9 +556,9 @@ static int __naja_div(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_mem(scf_vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poffset)
+static int __naja_mem(vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poffset)
 {
-	scf_vm_naja_t* naja   = vm->priv;
+	vm_naja_t* naja   = vm->priv;
 	uint8_t*       data   = NULL;
 	int64_t        offset = 0;
 
@@ -566,7 +566,7 @@ static int __naja_mem(scf_vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poff
 		data  = (uint8_t*)addr;
 
 		if (addr >= (int64_t)vm->data->data + vm->data->len) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -574,7 +574,7 @@ static int __naja_mem(scf_vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poff
 		data  = (uint8_t*)addr;
 
 		if (addr >= (int64_t)vm->rodata->data + vm->rodata->len) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -582,7 +582,7 @@ static int __naja_mem(scf_vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poff
 		data  = (uint8_t*)addr;
 
 		if (addr >= (int64_t)vm->text->data + vm->text->len) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -591,7 +591,7 @@ static int __naja_mem(scf_vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poff
 		offset = addr - vm->data->addr;
 
 		if (offset >= vm->data->len) {
-			scf_loge("offset: %#lx, vm->data->len: %ld\n", offset, vm->data->len);
+			loge("offset: %#lx, vm->data->len: %ld\n", offset, vm->data->len);
 			return -1;
 		}
 
@@ -600,7 +600,7 @@ static int __naja_mem(scf_vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poff
 		offset = addr - vm->rodata->addr;
 
 		if (offset >= vm->rodata->len) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -609,7 +609,7 @@ static int __naja_mem(scf_vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poff
 		offset = addr - vm->text->addr;
 
 		if (offset >= vm->text->len) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -623,9 +623,9 @@ static int __naja_mem(scf_vm_t* vm, int64_t addr, uint8_t** pdata, int64_t* poff
 	return 0;
 }
 
-static int __naja_fstr_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_fstr_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -635,7 +635,7 @@ static int __naja_fstr_disp(scf_vm_t* vm, uint32_t inst)
 	if (s13  & 0x1000)
 		s13 |= 0xffffe000;
 
-	scf_logd("rd: %d, rb: %d, s13: %d, SH: %d\n", rd, rb, s13, SH);
+	logd("rd: %d, rb: %d, s13: %d, SH: %d\n", rd, rb, s13, SH);
 
 	int64_t  addr   = naja->regs[rb];
 	int64_t  offset = 0;
@@ -653,7 +653,7 @@ static int __naja_fstr_disp(scf_vm_t* vm, uint32_t inst)
 		assert(offset > 0);
 
 		if (naja->size < offset) {
-			scf_loge("offset0: %ld, size: %ld\n", offset, naja->size);
+			loge("offset0: %ld, size: %ld\n", offset, naja->size);
 			return -EINVAL;
 		}
 
@@ -673,7 +673,7 @@ static int __naja_fstr_disp(scf_vm_t* vm, uint32_t inst)
 			NAJA_PRINTF("fstr    d%d, [r%d, %d]\n", rd, rb, s13 << 3);
 			break;
 		default:
-			scf_loge("SH: %d\n", SH);
+			loge("SH: %d\n", SH);
 			return -1;
 			break;
 	};
@@ -682,9 +682,9 @@ static int __naja_fstr_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fpush(scf_vm_t* vm, uint32_t inst)
+static int __naja_fpush(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -730,7 +730,7 @@ static int __naja_fpush(scf_vm_t* vm, uint32_t inst)
 			NAJA_PRINTF("fpush   d%d, [r%d]\n", rd, rb);
 			break;
 		default:
-			scf_loge("SH: %d\n", SH);
+			loge("SH: %d\n", SH);
 			return -1;
 			break;
 	};
@@ -741,9 +741,9 @@ static int __naja_fpush(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fldr_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_fldr_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -753,7 +753,7 @@ static int __naja_fldr_disp(scf_vm_t* vm, uint32_t inst)
 	if (s13  & 0x1000)
 		s13 |= 0xffffe000;
 
-	scf_logd("rd: %d, rb: %d, s13: %d, SH: %d\n", rd, rb, s13, SH);
+	logd("rd: %d, rb: %d, s13: %d, SH: %d\n", rd, rb, s13, SH);
 
 	int64_t  addr   = naja->regs[rb];
 	int64_t  offset = 0;
@@ -768,11 +768,11 @@ static int __naja_fldr_disp(scf_vm_t* vm, uint32_t inst)
 	if (data   == naja->stack) {
 		offset = -offset;
 
-		scf_logd("offset0: %ld, size: %ld\n", offset, naja->size);
+		logd("offset0: %ld, size: %ld\n", offset, naja->size);
 		assert(offset > 0);
 
 		if (naja->size < offset) {
-			scf_loge("offset: %ld, size: %ld\n", offset, naja->size);
+			loge("offset: %ld, size: %ld\n", offset, naja->size);
 			return -EINVAL;
 		}
 
@@ -791,7 +791,7 @@ static int __naja_fldr_disp(scf_vm_t* vm, uint32_t inst)
 			NAJA_PRINTF("fldr    d%d, [r%d, %d], rd: %lg, rb: %ld, %p\n", rd, rb, s13 << 3, naja->fvec[rd].d[0], naja->regs[rb], data + offset);
 			break;
 		default:
-			scf_loge("SH: %d\n", SH);
+			loge("SH: %d\n", SH);
 			return -1;
 			break;
 	};
@@ -800,15 +800,15 @@ static int __naja_fldr_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fpop(scf_vm_t* vm, uint32_t inst)
+static int __naja_fpop(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
 	int SH  = (inst >> 19) & 0x3;
 
-	scf_logd("rd: %d, rb: %d, SH: %d\n", rd, rb, SH);
+	logd("rd: %d, rb: %d, SH: %d\n", rd, rb, SH);
 
 	int64_t  addr   = naja->regs[rb];
 	int64_t  offset = 0;
@@ -821,11 +821,11 @@ static int __naja_fpop(scf_vm_t* vm, uint32_t inst)
 	if (data   == naja->stack) {
 		offset = -offset;
 
-		scf_logd("offset0: %ld, size: %ld\n", offset, naja->size);
+		logd("offset0: %ld, size: %ld\n", offset, naja->size);
 		assert(offset > 0);
 
 		if (naja->size < offset) {
-			scf_loge("offset: %ld, size: %ld\n", offset, naja->size);
+			loge("offset: %ld, size: %ld\n", offset, naja->size);
 			return -EINVAL;
 		}
 
@@ -844,7 +844,7 @@ static int __naja_fpop(scf_vm_t* vm, uint32_t inst)
 			NAJA_PRINTF("fldr    d%d, [r%d], rd: %lg, rb: %ld, %p\n", rd, rb, naja->fvec[rd].d[0], naja->regs[rb], data + offset);
 			break;
 		default:
-			scf_loge("SH: %d\n", SH);
+			loge("SH: %d\n", SH);
 			return -1;
 			break;
 	};
@@ -855,9 +855,9 @@ static int __naja_fpop(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_ldr_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_ldr_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -868,7 +868,7 @@ static int __naja_ldr_disp(scf_vm_t* vm, uint32_t inst)
 	if (s13  & 0x1000)
 		s13 |= 0xffffe000;
 
-	scf_logd("rd: %d, rb: %d, s13: %d, SH: %d\n", rd, rb, s13, SH);
+	logd("rd: %d, rb: %d, s13: %d, SH: %d\n", rd, rb, s13, SH);
 
 	int64_t  addr   = naja->regs[rb];
 	int64_t  offset = 0;
@@ -883,11 +883,11 @@ static int __naja_ldr_disp(scf_vm_t* vm, uint32_t inst)
 	if (data   == naja->stack) {
 		offset = -offset;
 
-		scf_logd("offset0: %ld, size: %ld\n", offset, naja->size);
+		logd("offset0: %ld, size: %ld\n", offset, naja->size);
 		assert(offset >= 0);
 
 		if (naja->size < offset) {
-			scf_loge("offset: %ld, size: %ld\n", offset, naja->size);
+			loge("offset: %ld, size: %ld\n", offset, naja->size);
 			return -EINVAL;
 		}
 
@@ -942,9 +942,9 @@ static int __naja_ldr_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_pop(scf_vm_t* vm, uint32_t inst)
+static int __naja_pop(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -962,11 +962,11 @@ static int __naja_pop(scf_vm_t* vm, uint32_t inst)
 	if (data   == naja->stack) {
 		offset  = -offset;
 
-		scf_logd("offset0: %ld, size: %ld\n", offset, naja->size);
+		logd("offset0: %ld, size: %ld\n", offset, naja->size);
 		assert(offset > 0);
 
 		if (naja->size < offset) {
-			scf_loge("offset: %ld, size: %ld\n", offset, naja->size);
+			loge("offset: %ld, size: %ld\n", offset, naja->size);
 			return -EINVAL;
 		}
 
@@ -1023,9 +1023,9 @@ static int __naja_pop(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_ldr_sib(scf_vm_t* vm, uint32_t inst)
+static int __naja_ldr_sib(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int ri  = (inst >>  5) & 0x1f;
@@ -1050,7 +1050,7 @@ static int __naja_ldr_sib(scf_vm_t* vm, uint32_t inst)
 		assert(offset >= 0);
 
 		if (naja->size < offset) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -1104,9 +1104,9 @@ static int __naja_ldr_sib(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fldr_sib(scf_vm_t* vm, uint32_t inst)
+static int __naja_fldr_sib(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int ri  = (inst >>  5) & 0x1f;
@@ -1130,7 +1130,7 @@ static int __naja_fldr_sib(scf_vm_t* vm, uint32_t inst)
 		assert(offset > 0);
 
 		if (naja->size < offset) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -1150,7 +1150,7 @@ static int __naja_fldr_sib(scf_vm_t* vm, uint32_t inst)
 			naja->fvec[rd].d[0] = *(double*)(data + offset);
 			break;
 		default:
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 			break;
 	};
@@ -1159,9 +1159,9 @@ static int __naja_fldr_sib(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fstr_sib(scf_vm_t* vm, uint32_t inst)
+static int __naja_fstr_sib(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int ri  = (inst >>  5) & 0x1f;
@@ -1185,7 +1185,7 @@ static int __naja_fstr_sib(scf_vm_t* vm, uint32_t inst)
 		assert(offset > 0);
 
 		if (naja->size < offset) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -1205,7 +1205,7 @@ static int __naja_fstr_sib(scf_vm_t* vm, uint32_t inst)
 			*(double*)(data + offset) = naja->fvec[rd].d[0];
 			break;
 		default:
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 			break;
 	};
@@ -1214,9 +1214,9 @@ static int __naja_fstr_sib(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_str_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_str_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -1242,7 +1242,7 @@ static int __naja_str_disp(scf_vm_t* vm, uint32_t inst)
 		assert(offset > 0);
 
 		if (naja->size < offset) {
-			scf_loge("offset0: %ld, size: %ld\n", offset, naja->size);
+			loge("offset0: %ld, size: %ld\n", offset, naja->size);
 			return -EINVAL;
 		}
 
@@ -1279,9 +1279,9 @@ static int __naja_str_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_push(scf_vm_t* vm, uint32_t inst)
+static int __naja_push(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -1298,7 +1298,7 @@ static int __naja_push(scf_vm_t* vm, uint32_t inst)
 	if (data   == naja->stack) {
 		offset = -offset;
 
-		scf_logd("offset0: %ld, size: %ld\n", offset, naja->size);
+		logd("offset0: %ld, size: %ld\n", offset, naja->size);
 
 		assert(offset >= 0);
 
@@ -1348,9 +1348,9 @@ static int __naja_push(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_str_sib(scf_vm_t* vm, uint32_t inst)
+static int __naja_str_sib(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rb  =  inst        & 0x1f;
 	int ri  = (inst >>  5) & 0x1f;
@@ -1374,7 +1374,7 @@ static int __naja_str_sib(scf_vm_t* vm, uint32_t inst)
 		assert(offset >= 0);
 
 		if (naja->size < offset) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 
@@ -1411,9 +1411,9 @@ static int __naja_str_sib(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_and(scf_vm_t* vm, uint32_t inst)
+static int __naja_and(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -1442,9 +1442,9 @@ static int __naja_and(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_or(scf_vm_t* vm, uint32_t inst)
+static int __naja_or(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs0 =  inst        & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -1470,9 +1470,9 @@ static int __naja_or(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_jmp_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_jmp_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int simm26 = inst & 0x3ffffff;
 
@@ -1484,9 +1484,9 @@ static int __naja_jmp_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_call_disp(scf_vm_t* vm, uint32_t inst)
+static int __naja_call_disp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int simm26 = inst & 0x3ffffff;
 
@@ -1501,9 +1501,9 @@ static int __naja_call_disp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_jmp_reg(scf_vm_t* vm, uint32_t inst)
+static int __naja_jmp_reg(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	if (inst & 0x1) {
 
@@ -1538,7 +1538,7 @@ static int __naja_jmp_reg(scf_vm_t* vm, uint32_t inst)
 		else if (5 == cc)
 			NAJA_PRINTF("jlt    %#lx, flags: %#lx\n", naja->ip, naja->flags);
 		else {
-			scf_loge("\n");
+			loge("\n");
 			return -EINVAL;
 		}
 
@@ -1551,7 +1551,7 @@ static int __naja_jmp_reg(scf_vm_t* vm, uint32_t inst)
 
 			int ret = naja_vm_dynamic_link(vm);
 			if (ret < 0) {
-				scf_loge("\n");
+				loge("\n");
 				return ret;
 			}
 
@@ -1593,9 +1593,9 @@ static int __naja_jmp_reg(scf_vm_t* vm, uint32_t inst)
 }
 
 
-static int __naja_call_reg(scf_vm_t* vm, uint32_t inst)
+static int __naja_call_reg(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rd = (inst >> 21) & 0x1f;
 
@@ -1607,7 +1607,7 @@ static int __naja_call_reg(scf_vm_t* vm, uint32_t inst)
 
 		int ret = naja_vm_dynamic_link(vm);
 		if (ret < 0) {
-			scf_loge("\n");
+			loge("\n");
 			return ret;
 		}
 
@@ -1646,9 +1646,9 @@ static int __naja_call_reg(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_adrp(scf_vm_t* vm, uint32_t inst)
+static int __naja_adrp(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rd  = (inst >> 21) & 0x1f;
 	int s21 =  inst & 0x1fffff;
@@ -1673,9 +1673,9 @@ static int __naja_adrp(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_ret(scf_vm_t* vm, uint32_t inst)
+static int __naja_ret(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	naja->ip   =  naja->regs[NAJA_REG_LR];
 	int64_t sp = -naja->regs[NAJA_REG_SP];
@@ -1686,7 +1686,7 @@ static int __naja_ret(scf_vm_t* vm, uint32_t inst)
 
 		void* p = realloc(naja->stack, sp + STACK_INC);
 		if (!p) {
-			scf_loge("\n");
+			loge("\n");
 			return -ENOMEM;
 		}
 
@@ -1698,34 +1698,34 @@ static int __naja_ret(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_setcc(scf_vm_t* vm, uint32_t inst)
+static int __naja_setcc(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rd = (inst >> 21) & 0x1f;
 	int cc = (inst >>  1) & 0xf;
 
 	naja->regs[rd] = 0 == (cc & naja->flags);
 
-	if (SCF_VM_Z == cc)
+	if (VM_Z == cc)
 		NAJA_PRINTF("setz   r%d\n", rd);
 
-	else if (SCF_VM_NZ == cc)
+	else if (VM_NZ == cc)
 		NAJA_PRINTF("setnz  r%d\n", rd);
 
-	else if (SCF_VM_GE == cc)
+	else if (VM_GE == cc)
 		NAJA_PRINTF("setge  r%d\n", rd);
 
-	else if (SCF_VM_GT == cc)
+	else if (VM_GT == cc)
 		NAJA_PRINTF("setgt  r%d\n", rd);
 
-	else if (SCF_VM_LT == cc)
+	else if (VM_LT == cc)
 		NAJA_PRINTF("setlt  r%d\n", rd);
 
-	else if (SCF_VM_LE == cc)
+	else if (VM_LE == cc)
 		NAJA_PRINTF("setle  r%d\n", rd);
 	else {
-		scf_loge("inst: %#x\n", inst);
+		loge("inst: %#x\n", inst);
 		return -EINVAL;
 	}
 
@@ -1733,9 +1733,9 @@ static int __naja_setcc(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_mov(scf_vm_t* vm, uint32_t inst)
+static int __naja_mov(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rd  = (inst >> 21) & 0x1f;
 	int SH  = (inst >> 19) & 0x3;
@@ -1859,9 +1859,9 @@ static int __naja_mov(scf_vm_t* vm, uint32_t inst)
 	return 0;
 }
 
-static int __naja_fmov(scf_vm_t* vm, uint32_t inst)
+static int __naja_fmov(vm_t* vm, uint32_t inst)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 
 	int rs  =  inst & 0x1f;
 	int rd  = (inst >> 21) & 0x1f;
@@ -1880,7 +1880,7 @@ static int __naja_fmov(scf_vm_t* vm, uint32_t inst)
 
 			NAJA_PRINTF("fsd2ss   f%d, d%d\n", rd, rs);
 		} else {
-			scf_loge("\n");
+			loge("\n");
 			return -EINVAL;
 		}
 
@@ -1998,9 +1998,9 @@ static void __naja_vm_exit()
 {
 }
 
-static int __naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
+static int __naja_vm_run(vm_t* vm, const char* path, const char* sys)
 {
-	scf_vm_naja_t* naja = vm->priv;
+	vm_naja_t* naja = vm->priv;
 	Elf64_Ehdr     eh;
 	Elf64_Shdr     sh;
 
@@ -2027,7 +2027,7 @@ static int __naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
 		}
 
 		if (i == eh.e_shnum) {
-			scf_loge("\n");
+			loge("\n");
 			return -1;
 		}
 	}
@@ -2048,7 +2048,7 @@ static int __naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
 		int64_t offset = naja->ip - vm->text->addr;
 
 		if (offset >= vm->text->len) {
-			scf_loge("naja->ip: %#lx, %p\n", naja->ip, __naja_vm_exit);
+			loge("naja->ip: %#lx, %p\n", naja->ip, __naja_vm_exit);
 			return -1;
 		}
 
@@ -2057,36 +2057,36 @@ static int __naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
 		naja_opcode_pt pt = naja_opcodes[(inst >> 26) & 0x3f];
 
 		if (!pt) {
-			scf_loge("inst: %d, %#x\n", (inst >> 26) & 0x3f, inst);
+			loge("inst: %d, %#x\n", (inst >> 26) & 0x3f, inst);
 			return -EINVAL;
 		}
 
 		NAJA_PRINTF("%4d, %#lx: ", n++, naja->ip);
 		ret = pt(vm, inst);
 		if (ret < 0) {
-			scf_loge("\n");
+			loge("\n");
 			return ret;
 		}
 
 //		usleep(10 * 1000);
 	}
 
-	scf_logw("r0: %ld, sizeof(fv256_t): %ld\n", naja->regs[0], sizeof(fv256_t));
+	logw("r0: %ld, sizeof(fv256_t): %ld\n", naja->regs[0], sizeof(fv256_t));
 	return naja->regs[0];
 }
 
-static int naja_vm_run(scf_vm_t* vm, const char* path, const char* sys)
+static int naja_vm_run(vm_t* vm, const char* path, const char* sys)
 {
 	int ret = naja_vm_init(vm, path, sys);
 	if (ret < 0) {
-		scf_loge("\n");
+		loge("\n");
 		return ret;
 	}
 
 	return __naja_vm_run(vm, path, sys);
 }
 
-scf_vm_ops_t  vm_ops_naja =
+vm_ops_t  vm_ops_naja =
 {
 	.name  = "naja",
 	.open  = naja_vm_open,

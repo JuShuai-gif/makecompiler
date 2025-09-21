@@ -1,4 +1,4 @@
-#include"scf_vm.h"
+#include"vm.h"
 
 int main(int argc, char* argv[])
 {
@@ -8,17 +8,17 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 
-	scf_vm_t* vm = NULL;
+	vm_t* vm = NULL;
 
-	int ret = scf_vm_open(&vm, "naja");
+	int ret = vm_open(&vm, "naja");
 	if (ret < 0) {
-		scf_loge("\n");
+		loge("\n");
 		return -1;
 	}
 
-	ret = scf_vm_run(vm, argv[1], "x64");
+	ret = vm_run(vm, argv[1], "x64");
 	if (ret < 0) {
-		scf_loge("\n");
+		loge("\n");
 		return -1;
 	}
 

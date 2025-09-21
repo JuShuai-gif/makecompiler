@@ -1,25 +1,25 @@
-CFILES += ../util/scf_string.c
+CFILES += ../util/string.c
 
-CFILES += ../elf/scf_elf.c
-CFILES += ../elf/scf_elf_link.c
-CFILES += ../elf/scf_elf_native.c
-CFILES += ../elf/scf_elf_native32.c
-CFILES += ../elf/scf_elf_x64.c
-CFILES += ../elf/scf_elf_x64_so.c
-CFILES += ../elf/scf_elf_arm64.c
-CFILES += ../elf/scf_elf_arm64_so.c
-CFILES += ../elf/scf_elf_arm32.c
-CFILES += ../elf/scf_elf_arm32_so.c
-CFILES += ../elf/scf_elf_naja.c
-CFILES += ../elf/scf_elf_naja_so.c
-CFILES += ../elf/scf_dwarf.c
-CFILES += ../elf/scf_dwarf_abbrev.c
-CFILES += ../elf/scf_dwarf_info.c
-CFILES += ../elf/scf_dwarf_line.c
+CFILES += ../elf/elf.c
+CFILES += ../elf/elf_link.c
+CFILES += ../elf/elf_native.c
+CFILES += ../elf/elf_native32.c
+CFILES += ../elf/elf_x64.c
+CFILES += ../elf/elf_x64_so.c
+CFILES += ../elf/elf_arm64.c
+CFILES += ../elf/elf_arm64_so.c
+CFILES += ../elf/elf_arm32.c
+CFILES += ../elf/elf_arm32_so.c
+CFILES += ../elf/elf_naja.c
+CFILES += ../elf/elf_naja_so.c
+CFILES += ../elf/dwarf.c
+CFILES += ../elf/dwarf_abbrev.c
+CFILES += ../elf/dwarf_info.c
+CFILES += ../elf/dwarf_line.c
 
-CFILES += ../vm/scf_vm.c
-CFILES += ../vm/scf_vm_naja.c
-CFILES += ../vm/scf_vm_naja_asm.c
+CFILES += ../vm/vm.c
+CFILES += ../vm/vm_naja.c
+CFILES += ../vm/vm_naja_asm.c
 CFILES += ../vm/main.c
 
 CFLAGS += -g

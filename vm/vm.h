@@ -1,7 +1,7 @@
-#ifndef SCF_VM_H
-#define SCF_VM_H
+#ifndef VM_H
+#define VM_H
 
-#include"scf_elf.h"
+#include"elf.h"
 #include<dlfcn.h>
 
 #if 0
@@ -14,21 +14,21 @@
 #define NAJA_REG_LR   29
 #define NAJA_REG_SP   30
 
-typedef struct scf_vm_s       scf_vm_t;
-typedef struct scf_vm_ops_s   scf_vm_ops_t;
+typedef struct vm_s       vm_t;
+typedef struct vm_ops_s   vm_ops_t;
 
-struct  scf_vm_s
+struct  vm_s
 {
-	scf_elf_context_t*        elf;
+	elf_context_t*        elf;
 
-	scf_vector_t*             sofiles;
-	scf_vector_t*             phdrs;
+	vector_t*             sofiles;
+	vector_t*             phdrs;
 
-	scf_elf_phdr_t*           text;
-	scf_elf_phdr_t*           rodata;
-	scf_elf_phdr_t*           data;
+	elf_phdr_t*           text;
+	elf_phdr_t*           rodata;
+	elf_phdr_t*           data;
 
-	scf_elf_phdr_t*           dynamic;
+	elf_phdr_t*           dynamic;
 	Elf64_Rela*               jmprel;
 	uint64_t                  jmprel_addr;
 	uint64_t                  jmprel_size;
@@ -36,26 +36,26 @@ struct  scf_vm_s
 	uint64_t*                 pltgot;
 	uint8_t*                  dynstr;
 
-	scf_vm_ops_t*             ops;
+	vm_ops_t*             ops;
 	void*                     priv;
 };
 
-struct scf_vm_ops_s
+struct vm_ops_s
 {
 	const char* name;
 
-	int  (*open )(scf_vm_t* vm);
-	int  (*close)(scf_vm_t* vm);
+	int  (*open )(vm_t* vm);
+	int  (*close)(vm_t* vm);
 
-	int  (*run  )(scf_vm_t* vm, const char* path, const char* sys);
+	int  (*run  )(vm_t* vm, const char* path, const char* sys);
 };
 
-#define  SCF_VM_Z   0
-#define  SCF_VM_NZ  1
-#define  SCF_VM_GE  2
-#define  SCF_VM_GT  3
-#define  SCF_VM_LE  4
-#define  SCF_VM_LT  5
+#define  VM_Z   0
+#define  VM_NZ  1
+#define  VM_GE  2
+#define  VM_GT  3
+#define  VM_LE  4
+#define  VM_LT  5
 
 typedef union {
 	uint8_t  b[32];
@@ -79,18 +79,18 @@ typedef struct {
 
 	uint64_t  _start;
 
-} scf_vm_naja_t;
+} vm_naja_t;
 
-typedef int (*naja_opcode_pt)(scf_vm_t* vm, uint32_t inst);
+typedef int (*naja_opcode_pt)(vm_t* vm, uint32_t inst);
 
-int scf_vm_open (scf_vm_t** pvm, const char* arch);
-int scf_vm_close(scf_vm_t*   vm);
-int scf_vm_clear(scf_vm_t*   vm);
+int vm_open (vm_t** pvm, const char* arch);
+int vm_close(vm_t*   vm);
+int vm_clear(vm_t*   vm);
 
-int scf_vm_run  (scf_vm_t*   vm, const char* path, const char* sys);
+int vm_run  (vm_t*   vm, const char* path, const char* sys);
 
-int naja_vm_open(scf_vm_t* vm);
-int naja_vm_close(scf_vm_t* vm);
-int naja_vm_init(scf_vm_t* vm, const char* path, const char* sys);
+int naja_vm_open(vm_t* vm);
+int naja_vm_close(vm_t* vm);
+int naja_vm_init(vm_t* vm, const char* path, const char* sys);
 
 #endif

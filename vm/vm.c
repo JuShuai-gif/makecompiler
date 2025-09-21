@@ -1,9 +1,9 @@
-#include"scf_vm.h"
+#include"vm.h"
 
-extern scf_vm_ops_t  vm_ops_naja;
-extern scf_vm_ops_t  vm_ops_naja_asm;
+extern vm_ops_t  vm_ops_naja;
+extern vm_ops_t  vm_ops_naja_asm;
 
-static scf_vm_ops_t* vm_ops_array[] =
+static vm_ops_t* vm_ops_array[] =
 {
 	&vm_ops_naja,
 	&vm_ops_naja_asm,
@@ -11,10 +11,10 @@ static scf_vm_ops_t* vm_ops_array[] =
 	NULL,
 };
 
-int scf_vm_open(scf_vm_t** pvm, const char* arch)
+int vm_open(vm_t** pvm, const char* arch)
 {
-	scf_vm_ops_t* ops = NULL;
-	scf_vm_t*     vm;
+	vm_ops_t* ops = NULL;
+	vm_t*     vm;
 
 	int  i;
 	for (i = 0; vm_ops_array[i]; i++) {
@@ -26,11 +26,11 @@ int scf_vm_open(scf_vm_t** pvm, const char* arch)
 	}
 
 	if (!ops) {
-		scf_loge("\n");
+		loge("\n");
 		return -EINVAL;
 	}
 
-	vm = calloc(1, sizeof(scf_vm_t));
+	vm = calloc(1, sizeof(vm_t));
 	if (!vm)
 		return -ENOMEM;
 
@@ -46,13 +46,13 @@ int scf_vm_open(scf_vm_t** pvm, const char* arch)
 	return 0;
 }
 
-int scf_vm_clear(scf_vm_t* vm)
+int vm_clear(vm_t* vm)
 {
 	if (!vm)
 		return -EINVAL;
 
 	if (vm->elf) {
-		scf_elf_close(vm->elf);
+		elf_close(vm->elf);
 		vm->elf = NULL;
 	}
 
@@ -62,7 +62,7 @@ int scf_vm_clear(scf_vm_t* vm)
 		for (i = 0; i < vm->sofiles->size; i++)
 			dlclose(vm->sofiles->data[i]);
 
-		scf_vector_free(vm->sofiles);
+		vector_free(vm->sofiles);
 		vm->sofiles = NULL;
 	}
 
@@ -73,10 +73,10 @@ int scf_vm_clear(scf_vm_t* vm)
 	return 0;
 }
 
-int scf_vm_close(scf_vm_t* vm)
+int vm_close(vm_t* vm)
 {
 	if (vm) {
-		scf_vm_clear(vm);
+		vm_clear(vm);
 
 		if (vm->ops && vm->ops->close)
 			vm->ops->close(vm);
@@ -88,12 +88,12 @@ int scf_vm_close(scf_vm_t* vm)
 	return 0;
 }
 
-int scf_vm_run(scf_vm_t* vm, const char* path, const char* sys)
+int vm_run(vm_t* vm, const char* path, const char* sys)
 {
 	if (vm  && vm->ops && vm->ops->run && path)
 		return vm->ops->run(vm, path, sys);
 
-	scf_loge("\n");
+	loge("\n");
 	return -EINVAL;
 }
 

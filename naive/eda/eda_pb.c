@@ -1,46 +1,46 @@
-#include "scf_eda_pb.h"
-#include "scf_def.h"
+#include "eda_pb.h"
+#include "def.h"
 
-static int component_pins[SCF_EDA_Components_NB] =
+static int component_pins[EDA_Components_NB] =
 {
 	0, // None
-	SCF_EDA_Battery_NB, // SCF_EDA_Battery
+	EDA_Battery_NB, // EDA_Battery
 
-	2, // SCF_EDA_Resistor
-	2, // SCF_EDA_Capacitor
-	2, // SCF_EDA_Inductor
+	2, // EDA_Resistor
+	2, // EDA_Capacitor
+	2, // EDA_Inductor
 
-	SCF_EDA_Diode_NB,
-	SCF_EDA_NPN_NB,
-	SCF_EDA_PNP_NB,
+	EDA_Diode_NB,
+	EDA_NPN_NB,
+	EDA_PNP_NB,
 };
 
-static scf_edata_t  component_datas[] =
+static edata_t  component_datas[] =
 {
-	{SCF_EDA_None,       0,                   0,  0, 0,         0, 0,    0,    0, 0},
-	{SCF_EDA_Battery,    0, SCF_EDA_Battery_POS,  0, 0,         0, 0,    0,    0, 0},
+	{EDA_None,       0,                   0,  0, 0,         0, 0,    0,    0, 0},
+	{EDA_Battery,    0, EDA_Battery_POS,  0, 0,         0, 0,    0,    0, 0},
 
-	{SCF_EDA_Resistor,   0,                   0,  0, 0, 10 * 1000, 0,    0,    0, 0},
-	{SCF_EDA_Capacitor,  0,                   0,  0, 0,      1e12, 0,  0.1,    0, 0},
-	{SCF_EDA_Inductor,   0,                   0,  0, 0,         0, 0,    0, 1000, 0},
+	{EDA_Resistor,   0,                   0,  0, 0, 10 * 1000, 0,    0,    0, 0},
+	{EDA_Capacitor,  0,                   0,  0, 0,      1e12, 0,  0.1,    0, 0},
+	{EDA_Inductor,   0,                   0,  0, 0,         0, 0,    0, 1000, 0},
 };
 
-static scf_edata_t  pin_datas[] =
+static edata_t  pin_datas[] =
 {
-	{SCF_EDA_None,  0,                 0, 0, 0,   0, 0, 0, 0, 0},
+	{EDA_None,  0,                 0, 0, 0,   0, 0, 0, 0, 0},
 
-	{SCF_EDA_Diode, 0, SCF_EDA_Diode_NEG, 0, 0, 750, 0, 0, 0, 0},
+	{EDA_Diode, 0, EDA_Diode_NEG, 0, 0, 750, 0, 0, 0, 0},
 
-	{SCF_EDA_NPN,   0, SCF_EDA_NPN_B,     0, 0, 750, 0, 0, 0, 0},
-	{SCF_EDA_NPN,   0, SCF_EDA_NPN_C,     0, 0,  10, 0, 0, 0, 150},
+	{EDA_NPN,   0, EDA_NPN_B,     0, 0, 750, 0, 0, 0, 0},
+	{EDA_NPN,   0, EDA_NPN_C,     0, 0,  10, 0, 0, 0, 150},
 
-	{SCF_EDA_PNP,   0, SCF_EDA_PNP_B,     0, 0, 750, 0, 0, 0, 0},
-	{SCF_EDA_PNP,   0, SCF_EDA_PNP_C,     0, 0,  10, 0, 0, 0, 150},
+	{EDA_PNP,   0, EDA_PNP_B,     0, 0, 750, 0, 0, 0, 0},
+	{EDA_PNP,   0, EDA_PNP_C,     0, 0,  10, 0, 0, 0, 150},
 };
 
-static scf_edata_t* _pin_find_data(const uint64_t type, const uint64_t model, const uint64_t pid)
+static edata_t* _pin_find_data(const uint64_t type, const uint64_t model, const uint64_t pid)
 {
-	scf_edata_t* ed;
+	edata_t* ed;
 
 	int i;
 	for (i = 0; i < sizeof(pin_datas) / sizeof(pin_datas[0]); i++) {
@@ -53,9 +53,9 @@ static scf_edata_t* _pin_find_data(const uint64_t type, const uint64_t model, co
 	return NULL;
 }
 
-static scf_edata_t* _component_find_data(const uint64_t type, const uint64_t model)
+static edata_t* _component_find_data(const uint64_t type, const uint64_t model)
 {
-	scf_edata_t* ed;
+	edata_t* ed;
 
 	int i;
 	for (i = 0; i < sizeof(component_datas) / sizeof(component_datas[0]); i++) {
@@ -68,17 +68,17 @@ static scf_edata_t* _component_find_data(const uint64_t type, const uint64_t mod
 	return NULL;
 }
 
-ScfEconn* scf_econn__alloc()
+ScfEconn* econn__alloc()
 {
 	ScfEconn* ec = malloc(sizeof(ScfEconn));
 	if (!ec)
 		return NULL;
 
-	scf_econn__init(ec);
+	econn__init(ec);
 	return ec;
 }
 
-int scf_econn__add_cid(ScfEconn* ec, uint64_t cid)
+int econn__add_cid(ScfEconn* ec, uint64_t cid)
 {
 	if (!ec)
 		return -EINVAL;
@@ -98,7 +98,7 @@ int scf_econn__add_cid(ScfEconn* ec, uint64_t cid)
 	return 0;
 }
 
-int scf_econn__del_cid(ScfEconn* ec, uint64_t cid)
+int econn__del_cid(ScfEconn* ec, uint64_t cid)
 {
 	if (!ec)
 		return -EINVAL;
@@ -126,7 +126,7 @@ int scf_econn__del_cid(ScfEconn* ec, uint64_t cid)
 	return -EINVAL;
 }
 
-void scf_econn__free(ScfEconn* ec)
+void econn__free(ScfEconn* ec)
 {
 	if (ec) {
 		if (ec->cids)
@@ -136,17 +136,17 @@ void scf_econn__free(ScfEconn* ec)
 	}
 }
 
-ScfEline* scf_eline__alloc()
+ScfEline* eline__alloc()
 {
 	ScfEline* l = malloc(sizeof(ScfEline));
 	if (!l)
 		return NULL;
 
-	scf_eline__init(l);
+	eline__init(l);
 	return l;
 }
 
-int scf_eline__add_line(ScfEline* el, ScfLine*  l)
+int eline__add_line(ScfEline* el, ScfLine*  l)
 {
 	if (!el || !l)
 		return -EINVAL;
@@ -172,7 +172,7 @@ int scf_eline__add_line(ScfEline* el, ScfLine*  l)
 	return 0;
 }
 
-int scf_eline__del_line(ScfEline* el, ScfLine*  l)
+int eline__del_line(ScfEline* el, ScfLine*  l)
 {
 	if (!el || !l)
 		return -EINVAL;
@@ -203,7 +203,7 @@ int scf_eline__del_line(ScfEline* el, ScfLine*  l)
 	return -EINVAL;
 }
 
-int scf_eline__add_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
+int eline__add_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
 {
 	if (!el)
 		return -EINVAL;
@@ -224,7 +224,7 @@ int scf_eline__add_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
 	return 0;
 }
 
-int scf_eline__del_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
+int eline__del_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
 {
 	if (!el)
 		return -EINVAL;
@@ -252,7 +252,7 @@ int scf_eline__del_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
 	return -EINVAL;
 }
 
-int scf_eline__add_conn(ScfEline* el, ScfEconn* ec)
+int eline__add_conn(ScfEline* el, ScfEconn* ec)
 {
 	if (!el || !ec)
 		return -EINVAL;
@@ -272,7 +272,7 @@ int scf_eline__add_conn(ScfEline* el, ScfEconn* ec)
 	return 0;
 }
 
-int scf_eline__del_conn(ScfEline* el, ScfEconn* ec)
+int eline__del_conn(ScfEline* el, ScfEconn* ec)
 {
 	if (!el || !ec)
 		return -EINVAL;
@@ -300,7 +300,7 @@ int scf_eline__del_conn(ScfEline* el, ScfEconn* ec)
 	return -EINVAL;
 }
 
-void scf_eline__free(ScfEline* l)
+void eline__free(ScfEline* l)
 {
 	if (l) {
 		size_t i;
@@ -310,7 +310,7 @@ void scf_eline__free(ScfEline* l)
 
 		if (l->conns) {
 			for (i = 0; i < l->n_conns; i++)
-				scf_econn__free(l->conns[i]);
+				econn__free(l->conns[i]);
 
 			free(l->conns);
 		}
@@ -326,17 +326,17 @@ void scf_eline__free(ScfEline* l)
 	}
 }
 
-ScfEpin* scf_epin__alloc()
+ScfEpin* epin__alloc()
 {
 	ScfEpin* pin = malloc(sizeof(ScfEpin));
 	if (!pin)
 		return NULL;
 
-	scf_epin__init(pin);
+	epin__init(pin);
 	return pin;
 }
 
-int scf_epin__add_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
+int epin__add_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
 {
 	if (!pin)
 		return -EINVAL;
@@ -357,7 +357,7 @@ int scf_epin__add_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
 	return 0;
 }
 
-int scf_epin__del_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
+int epin__del_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
 {
 	if (!pin)
 		return -EINVAL;
@@ -385,10 +385,10 @@ int scf_epin__del_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
 	return -EINVAL;
 }
 
-void scf_epin__free(ScfEpin* pin)
+void epin__free(ScfEpin* pin)
 {
 	if (pin) {
-		scf_logd("pin: %p\n", pin);
+		logd("pin: %p\n", pin);
 
 		if (pin->tos)
 			free(pin->tos);
@@ -396,19 +396,19 @@ void scf_epin__free(ScfEpin* pin)
 	}
 }
 
-ScfEcomponent* scf_ecomponent__alloc(uint64_t type)
+ScfEcomponent* ecomponent__alloc(uint64_t type)
 {
 	ScfEcomponent* c;
-	scf_edata_t*   ed;
+	edata_t*   ed;
 
-	if (type >= SCF_EDA_Components_NB)
+	if (type >= EDA_Components_NB)
 		return NULL;
 
 	c = malloc(sizeof(ScfEcomponent));
 	if (!c)
 		return NULL;
 
-	scf_ecomponent__init(c);
+	ecomponent__init(c);
 
 	c->type = type;
 
@@ -425,17 +425,17 @@ ScfEcomponent* scf_ecomponent__alloc(uint64_t type)
 	int i;
 	for (i = 0; i < component_pins[type]; i++) {
 
-		ScfEpin* pin = scf_epin__alloc();
+		ScfEpin* pin = epin__alloc();
 		if (!pin) {
-			scf_ecomponent__free(c);
+			ecomponent__free(c);
 			return NULL;
 		}
 
 		pin->id = i;
 
-		if (scf_ecomponent__add_pin(c, pin) < 0) {
-			scf_ecomponent__free(c);
-			scf_epin__free(pin);
+		if (ecomponent__add_pin(c, pin) < 0) {
+			ecomponent__free(c);
+			epin__free(pin);
 			return NULL;
 		}
 
@@ -454,7 +454,7 @@ ScfEcomponent* scf_ecomponent__alloc(uint64_t type)
 	return c;
 }
 
-int scf_ecomponent__add_pin(ScfEcomponent* c, ScfEpin* pin)
+int ecomponent__add_pin(ScfEcomponent* c, ScfEpin* pin)
 {
 	if (!c || !pin)
 		return -EINVAL;
@@ -468,7 +468,7 @@ int scf_ecomponent__add_pin(ScfEcomponent* c, ScfEpin* pin)
 	return 0;
 }
 
-int scf_ecomponent__del_pin(ScfEcomponent* c, ScfEpin* pin)
+int ecomponent__del_pin(ScfEcomponent* c, ScfEpin* pin)
 {
 	if (!c)
 		return -EINVAL;
@@ -496,16 +496,16 @@ int scf_ecomponent__del_pin(ScfEcomponent* c, ScfEpin* pin)
 	return -EINVAL;
 }
 
-void scf_ecomponent__free(ScfEcomponent* c)
+void ecomponent__free(ScfEcomponent* c)
 {
 	if (c) {
-		scf_logd("c: %ld\n", c->id);
+		logd("c: %ld\n", c->id);
 
 		if (c->pins) {
 			size_t i;
 
 			for (i = 0; i < c->n_pins; i++)
-				scf_epin__free(c->pins[i]);
+				epin__free(c->pins[i]);
 
 			free(c->pins);
 		}
@@ -514,13 +514,13 @@ void scf_ecomponent__free(ScfEcomponent* c)
 	}
 }
 
-ScfEfunction*  scf_efunction__alloc(const char* name)
+ScfEfunction*  efunction__alloc(const char* name)
 {
 	ScfEfunction* f = malloc(sizeof(ScfEfunction));
 	if (!f)
 		return NULL;
 
-	scf_efunction__init(f);
+	efunction__init(f);
 
 	f->name = strdup(name);
 	if (!f->name) {
@@ -531,7 +531,7 @@ ScfEfunction*  scf_efunction__alloc(const char* name)
 	return f;
 }
 
-int scf_efunction__add_component(ScfEfunction* f, ScfEcomponent* c)
+int efunction__add_component(ScfEfunction* f, ScfEcomponent* c)
 {
 	if (!f || !c)
 		return -EINVAL;
@@ -545,7 +545,7 @@ int scf_efunction__add_component(ScfEfunction* f, ScfEcomponent* c)
 	return 0;
 }
 
-int scf_efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
+int efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
 {
 	if (!f || !c)
 		return -EINVAL;
@@ -573,7 +573,7 @@ int scf_efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
 	return -EINVAL;
 }
 
-int scf_efunction__add_eline(ScfEfunction* f, ScfEline* el)
+int efunction__add_eline(ScfEfunction* f, ScfEline* el)
 {
 	if (!f || !el)
 		return -EINVAL;
@@ -587,7 +587,7 @@ int scf_efunction__add_eline(ScfEfunction* f, ScfEline* el)
 	return 0;
 }
 
-int scf_efunction__del_eline(ScfEfunction* f, ScfEline* el)
+int efunction__del_eline(ScfEfunction* f, ScfEline* el)
 {
 	if (!f || !el)
 		return -EINVAL;
@@ -615,16 +615,16 @@ int scf_efunction__del_eline(ScfEfunction* f, ScfEline* el)
 	return -EINVAL;
 }
 
-void scf_efunction__free(ScfEfunction* f)
+void efunction__free(ScfEfunction* f)
 {
 	if (f) {
-		scf_logd("f: %s\n", f->name);
+		logd("f: %s\n", f->name);
 
 		if (f->components) {
 			size_t i;
 
 			for (i = 0; i < f->n_components; i++)
-				scf_ecomponent__free(f->components[i]);
+				ecomponent__free(f->components[i]);
 
 			free(f->components);
 		}
@@ -634,17 +634,17 @@ void scf_efunction__free(ScfEfunction* f)
 	}
 }
 
-ScfEboard* scf_eboard__alloc()
+ScfEboard* eboard__alloc()
 {
 	ScfEboard* b = malloc(sizeof(ScfEboard));
 	if (!b)
 		return NULL;
 
-	scf_eboard__init(b);
+	eboard__init(b);
 	return b;
 }
 
-int scf_eboard__add_function(ScfEboard* b, ScfEfunction* f)
+int eboard__add_function(ScfEboard* b, ScfEfunction* f)
 {
 	if (!b || !f)
 		return -EINVAL;
@@ -658,7 +658,7 @@ int scf_eboard__add_function(ScfEboard* b, ScfEfunction* f)
 	return 0;
 }
 
-int scf_eboard__del_function(ScfEboard* b, ScfEfunction* f)
+int eboard__del_function(ScfEboard* b, ScfEfunction* f)
 {
 	if (!b)
 		return -EINVAL;
@@ -686,14 +686,14 @@ int scf_eboard__del_function(ScfEboard* b, ScfEfunction* f)
 	return -EINVAL;
 }
 
-void scf_eboard__free(ScfEboard* b)
+void eboard__free(ScfEboard* b)
 {
 	if (b) {
 		if (b->functions) {
 			size_t i;
 
 			for (i = 0; i < b->n_functions; i++)
-				scf_efunction__free(b->functions[i]);
+				efunction__free(b->functions[i]);
 
 			free(b->functions);
 		}

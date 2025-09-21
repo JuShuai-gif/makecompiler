@@ -1,6 +1,6 @@
 syntax="proto2";
 
-message scf_line
+message line
 {
 	required int32 x0 = 1;
 	required int32 y0 = 2;
@@ -8,7 +8,7 @@ message scf_line
 	required int32 y1 = 4;
 }
 
-message scf_epin
+message epin
 {
 	required uint64    id    = 1;
 	required uint64    cid   = 2;
@@ -52,13 +52,13 @@ message scf_epin
 	required bool      aconst = 30;
 }
 
-message scf_econn
+message econn
 {
 	required uint64    lid   = 1;
 	repeated uint64    cids  = 2;
 }
 
-message scf_eline
+message eline
 {
 	required uint64    id     = 1;
 	repeated uint64    pins   = 2;
@@ -66,8 +66,8 @@ message scf_eline
 	required uint64    flags  = 4;
 	required int64     color  = 5;
 
-	repeated scf_econn conns  = 6;
-	repeated scf_line  lines  = 7;
+	repeated econn conns  = 6;
+	repeated line  lines  = 7;
 
 	required double    v      = 8;
 	required double    jv     = 9;
@@ -79,12 +79,12 @@ message scf_eline
 	required bool      vflag  = 14;
 }
 
-message scf_ecomponent
+message ecomponent
 {
 	required uint64    id     = 1;
 	required uint64    type   = 2;
 	required uint64    model  = 3;
-	repeated scf_epin  pins   = 4;
+	repeated epin  pins   = 4;
 
 	required double    v      = 5;
 	required double    jv     = 6;
@@ -108,11 +108,11 @@ message scf_ecomponent
 	required bool      lock   = 20;
 }
 
-message scf_efunction
+message efunction
 {
 	required string         name       = 1;
-	repeated scf_ecomponent components = 2;
-	repeated scf_eline      elines     = 3;
+	repeated ecomponent components = 2;
+	repeated eline      elines     = 3;
 
 	required int32    x    = 4;
 	required int32    y    = 5;
@@ -120,7 +120,7 @@ message scf_efunction
 	required int32    h    = 7;
 }
 
-message scf_eboard
+message eboard
 {
-	repeated scf_efunction functions = 1;
+	repeated efunction functions = 1;
 }

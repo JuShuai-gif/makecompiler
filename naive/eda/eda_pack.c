@@ -1,102 +1,102 @@
-#include "scf_eda_pack.h"
+#include "eda_pack.h"
 
-static int component_pins[SCF_EDA_Components_NB] =
+static int component_pins[EDA_Components_NB] =
 {
 	0, // None
-	SCF_EDA_Battery_NB, // SCF_EDA_Battery
+	EDA_Battery_NB, // EDA_Battery
 
-	2, // SCF_EDA_Resistor
-	2, // SCF_EDA_Capacitor
-	2, // SCF_EDA_Inductor
+	2, // EDA_Resistor
+	2, // EDA_Capacitor
+	2, // EDA_Inductor
 
-	SCF_EDA_Diode_NB,
-	SCF_EDA_NPN_NB,
-	SCF_EDA_PNP_NB,
+	EDA_Diode_NB,
+	EDA_NPN_NB,
+	EDA_PNP_NB,
 
-	SCF_EDA_NAND_NB,
-	SCF_EDA_NOR_NB,
-	SCF_EDA_NOT_NB,
+	EDA_NAND_NB,
+	EDA_NOR_NB,
+	EDA_NOT_NB,
 
-	SCF_EDA_AND_NB,
-	SCF_EDA_OR_NB,
-	SCF_EDA_XOR_NB,
+	EDA_AND_NB,
+	EDA_OR_NB,
+	EDA_XOR_NB,
 
-	SCF_EDA_ADD_NB,
+	EDA_ADD_NB,
 
-	SCF_EDA_NAND4_NB,
-	SCF_EDA_AND2_OR_NB,
+	EDA_NAND4_NB,
+	EDA_AND2_OR_NB,
 
-	SCF_EDA_IF_NB,
-	SCF_EDA_MLA_NB,
-	SCF_EDA_ADC_NB,
+	EDA_IF_NB,
+	EDA_MLA_NB,
+	EDA_ADC_NB,
 
-	SCF_EDA_DFF_NB,
+	EDA_DFF_NB,
 
-	SCF_EDA_Signal_NB,
+	EDA_Signal_NB,
 
-	SCF_EDA_OP_AMP_NB,
+	EDA_OP_AMP_NB,
 	2, // crystal oscillator
 };
 
 static int __diode_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_Diode_NEG == p0->id)
+	if (EDA_Diode_NEG == p0->id)
 		return 1;
 	return 0;
 }
 
 static int __npn_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_NPN_E == p0->id)
+	if (EDA_NPN_E == p0->id)
 		return 1;
 
-	if (!p1 || SCF_EDA_NPN_E == p1->id)
+	if (!p1 || EDA_NPN_E == p1->id)
 		return 0;
 	return 1;
 }
 
 static int __npn_shared(ScfEpin* p, int flags)
 {
-	if (SCF_EDA_NPN_E == p->id)
+	if (EDA_NPN_E == p->id)
 		return 1;
 	return 0;
 }
 
 static int __pnp_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_PNP_E != p0->id)
+	if (EDA_PNP_E != p0->id)
 		return 1;
 
-	if (!p1 || SCF_EDA_PNP_E != p1->id)
+	if (!p1 || EDA_PNP_E != p1->id)
 		return 0;
 	return 1;
 }
 
 static int __pnp_shared(ScfEpin* p, int flags)
 {
-	if (SCF_EDA_PNP_E == p->id)
+	if (EDA_PNP_E == p->id)
 		return 1;
 	return 0;
 }
 
 static int __ttl_nand_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_NAND_NEG == p0->id)
+	if (EDA_NAND_NEG == p0->id)
 		return 1;
-	if (flags && (SCF_EDA_NAND_IN0 == p0->id || SCF_EDA_NAND_IN1 == p0->id))
+	if (flags && (EDA_NAND_IN0 == p0->id || EDA_NAND_IN1 == p0->id))
 		return 1;
 
-	if (SCF_EDA_NAND_POS == p0->id) {
-		if (p1 && (SCF_EDA_NAND_IN0 == p1->id || SCF_EDA_NAND_IN1 == p1->id))
+	if (EDA_NAND_POS == p0->id) {
+		if (p1 && (EDA_NAND_IN0 == p1->id || EDA_NAND_IN1 == p1->id))
 			return 1;
 	} else {
 		if (p1) {
 			if (!flags
-					&& (SCF_EDA_NAND_IN0 == p0->id || SCF_EDA_NAND_IN1 == p0->id)
-					&&  SCF_EDA_NAND_OUT == p1->id)
+					&& (EDA_NAND_IN0 == p0->id || EDA_NAND_IN1 == p0->id)
+					&&  EDA_NAND_OUT == p1->id)
 				return 0;
 
-			if (SCF_EDA_NAND_NEG != p1->id)
+			if (EDA_NAND_NEG != p1->id)
 				return 1;
 		}
 	}
@@ -106,7 +106,7 @@ static int __ttl_nand_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 static int __ttl_nand_shared(ScfEpin* p, int flags)
 {
 	if (!flags) {
-		if (SCF_EDA_NAND_OUT == p->id)
+		if (EDA_NAND_OUT == p->id)
 			return 0;
 	}
 	return 1;
@@ -114,19 +114,19 @@ static int __ttl_nand_shared(ScfEpin* p, int flags)
 
 static int __ttl_not_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_NOT_NEG == p0->id)
+	if (EDA_NOT_NEG == p0->id)
 		return 1;
-	if (flags && SCF_EDA_NOT_IN == p0->id)
+	if (flags && EDA_NOT_IN == p0->id)
 		return 1;
 
-	if (SCF_EDA_NOT_POS == p0->id) {
-		if (p1 && SCF_EDA_NOT_IN == p1->id)
+	if (EDA_NOT_POS == p0->id) {
+		if (p1 && EDA_NOT_IN == p1->id)
 			return 1;
 	} else {
 		if (p1) {
-			if (!flags && SCF_EDA_NOT_IN == p0->id && SCF_EDA_NOT_OUT == p1->id)
+			if (!flags && EDA_NOT_IN == p0->id && EDA_NOT_OUT == p1->id)
 				return 0;
-			if (SCF_EDA_NOT_NEG != p1->id)
+			if (EDA_NOT_NEG != p1->id)
 				return 1;
 		}
 	}
@@ -136,7 +136,7 @@ static int __ttl_not_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 static int __ttl_not_shared(ScfEpin* p, int flags)
 {
 	if (!flags) {
-		if (SCF_EDA_NOT_OUT == p->id)
+		if (EDA_NOT_OUT == p->id)
 			return 0;
 	}
 	return 1;
@@ -144,22 +144,22 @@ static int __ttl_not_shared(ScfEpin* p, int flags)
 
 static int __ttl_add_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_ADD_NEG == p0->id)
+	if (EDA_ADD_NEG == p0->id)
 		return 1;
-	if (flags && (SCF_EDA_ADD_IN0 == p0->id || SCF_EDA_ADD_IN1 == p0->id))
+	if (flags && (EDA_ADD_IN0 == p0->id || EDA_ADD_IN1 == p0->id))
 		return 1;
 
-	if (SCF_EDA_ADD_POS == p0->id) {
-		if (p1 && (SCF_EDA_ADD_IN0 == p1->id || SCF_EDA_ADD_IN1 == p1->id))
+	if (EDA_ADD_POS == p0->id) {
+		if (p1 && (EDA_ADD_IN0 == p1->id || EDA_ADD_IN1 == p1->id))
 			return 1;
 	} else {
 		if (p1) {
 			if (!flags
-					&& (SCF_EDA_ADD_IN0 == p0->id || SCF_EDA_ADD_IN1 == p0->id)
-					&& (SCF_EDA_ADD_OUT == p1->id || SCF_EDA_ADD_CF == p1->id))
+					&& (EDA_ADD_IN0 == p0->id || EDA_ADD_IN1 == p0->id)
+					&& (EDA_ADD_OUT == p1->id || EDA_ADD_CF == p1->id))
 				return 0;
 
-			if (SCF_EDA_ADD_NEG != p1->id)
+			if (EDA_ADD_NEG != p1->id)
 				return 1;
 		}
 	}
@@ -169,7 +169,7 @@ static int __ttl_add_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 static int __ttl_add_shared(ScfEpin* p, int flags)
 {
 	if (!flags) {
-		if (SCF_EDA_ADD_OUT == p->id || SCF_EDA_ADD_CF == p->id)
+		if (EDA_ADD_OUT == p->id || EDA_ADD_CF == p->id)
 			return 0;
 	}
 	return 1;
@@ -177,22 +177,22 @@ static int __ttl_add_shared(ScfEpin* p, int flags)
 
 static int __ttl_nand4_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_NAND4_NEG == p0->id)
+	if (EDA_NAND4_NEG == p0->id)
 		return 1;
-	if (flags && (SCF_EDA_NAND4_IN0 <= p0->id && p0->id <= SCF_EDA_NAND4_IN3))
+	if (flags && (EDA_NAND4_IN0 <= p0->id && p0->id <= EDA_NAND4_IN3))
 		return 1;
 
-	if (SCF_EDA_NAND4_POS == p0->id) {
-		if (p1 && (SCF_EDA_NAND4_IN0 <= p0->id && p0->id <= SCF_EDA_NAND4_IN3))
+	if (EDA_NAND4_POS == p0->id) {
+		if (p1 && (EDA_NAND4_IN0 <= p0->id && p0->id <= EDA_NAND4_IN3))
 			return 1;
 	} else {
 		if (p1) {
 			if (!flags
-					&& (SCF_EDA_NAND4_IN0 <= p0->id && p0->id <= SCF_EDA_NAND4_IN3)
-					&&  SCF_EDA_NAND4_OUT == p1->id)
+					&& (EDA_NAND4_IN0 <= p0->id && p0->id <= EDA_NAND4_IN3)
+					&&  EDA_NAND4_OUT == p1->id)
 				return 0;
 
-			if (SCF_EDA_NAND4_NEG != p1->id)
+			if (EDA_NAND4_NEG != p1->id)
 				return 1;
 		}
 	}
@@ -202,7 +202,7 @@ static int __ttl_nand4_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 static int __ttl_nand4_shared(ScfEpin* p, int flags)
 {
 	if (!flags) {
-		if (SCF_EDA_NAND4_OUT == p->id)
+		if (EDA_NAND4_OUT == p->id)
 			return 0;
 	}
 	return 1;
@@ -210,22 +210,22 @@ static int __ttl_nand4_shared(ScfEpin* p, int flags)
 
 static int __ttl_if_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_IF_NEG == p0->id)
+	if (EDA_IF_NEG == p0->id)
 		return 1;
-	if (flags && (SCF_EDA_IF_TRUE <= p0->id && p0->id <= SCF_EDA_IF_FALSE))
+	if (flags && (EDA_IF_TRUE <= p0->id && p0->id <= EDA_IF_FALSE))
 		return 1;
 
-	if (SCF_EDA_IF_POS == p0->id) {
-		if (p1 && (SCF_EDA_IF_TRUE <= p0->id && p0->id <= SCF_EDA_IF_FALSE))
+	if (EDA_IF_POS == p0->id) {
+		if (p1 && (EDA_IF_TRUE <= p0->id && p0->id <= EDA_IF_FALSE))
 			return 1;
 	} else {
 		if (p1) {
 			if (!flags
-					&& (SCF_EDA_IF_TRUE <= p0->id && p0->id <= SCF_EDA_IF_FALSE)
-					&&  SCF_EDA_IF_OUT  == p1->id)
+					&& (EDA_IF_TRUE <= p0->id && p0->id <= EDA_IF_FALSE)
+					&&  EDA_IF_OUT  == p1->id)
 				return 0;
 
-			if (SCF_EDA_IF_NEG != p1->id)
+			if (EDA_IF_NEG != p1->id)
 				return 1;
 		}
 	}
@@ -235,7 +235,7 @@ static int __ttl_if_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 static int __ttl_if_shared(ScfEpin* p, int flags)
 {
 	if (!flags) {
-		if (SCF_EDA_IF_OUT == p->id)
+		if (EDA_IF_OUT == p->id)
 			return 0;
 	}
 	return 1;
@@ -243,22 +243,22 @@ static int __ttl_if_shared(ScfEpin* p, int flags)
 
 static int __ttl_mla_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_MLA_NEG == p0->id)
+	if (EDA_MLA_NEG == p0->id)
 		return 1;
-	if (flags && (SCF_EDA_MLA_IN0 <= p0->id && p0->id <= SCF_EDA_MLA_IN3))
+	if (flags && (EDA_MLA_IN0 <= p0->id && p0->id <= EDA_MLA_IN3))
 		return 1;
 
-	if (SCF_EDA_MLA_POS == p0->id) {
-		if (p1 && (SCF_EDA_MLA_IN0 <= p1->id && p1->id <= SCF_EDA_MLA_IN3))
+	if (EDA_MLA_POS == p0->id) {
+		if (p1 && (EDA_MLA_IN0 <= p1->id && p1->id <= EDA_MLA_IN3))
 			return 1;
 	} else {
 		if (p1) {
 			if (!flags
-					&& (SCF_EDA_MLA_IN0 <= p0->id && p0->id <= SCF_EDA_MLA_IN3)
-					&& (SCF_EDA_MLA_OUT == p1->id && p1->id <= SCF_EDA_MLA_CF))
+					&& (EDA_MLA_IN0 <= p0->id && p0->id <= EDA_MLA_IN3)
+					&& (EDA_MLA_OUT == p1->id && p1->id <= EDA_MLA_CF))
 				return 0;
 
-			if (SCF_EDA_MLA_NEG != p1->id)
+			if (EDA_MLA_NEG != p1->id)
 				return 1;
 		}
 	}
@@ -268,7 +268,7 @@ static int __ttl_mla_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 static int __ttl_mla_shared(ScfEpin* p, int flags)
 {
 	if (!flags) {
-		if (SCF_EDA_MLA_OUT == p->id && p->id <= SCF_EDA_MLA_CF)
+		if (EDA_MLA_OUT == p->id && p->id <= EDA_MLA_CF)
 			return 0;
 	}
 	return 1;
@@ -276,22 +276,22 @@ static int __ttl_mla_shared(ScfEpin* p, int flags)
 
 static int __ttl_adc_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_ADC_NEG == p0->id)
+	if (EDA_ADC_NEG == p0->id)
 		return 1;
-	if (flags && (SCF_EDA_ADC_CI <= p0->id && p0->id <= SCF_EDA_ADC_IN1))
+	if (flags && (EDA_ADC_CI <= p0->id && p0->id <= EDA_ADC_IN1))
 		return 1;
 
-	if (SCF_EDA_ADC_POS == p0->id) {
-		if (p1 && (SCF_EDA_ADC_CI <= p1->id && p1->id <= SCF_EDA_ADC_IN1))
+	if (EDA_ADC_POS == p0->id) {
+		if (p1 && (EDA_ADC_CI <= p1->id && p1->id <= EDA_ADC_IN1))
 			return 1;
 	} else {
 		if (p1) {
 			if (!flags
-					&& (SCF_EDA_ADC_CI  <= p0->id && p0->id <= SCF_EDA_ADC_IN1)
-					&& (SCF_EDA_ADC_OUT == p1->id && p1->id <= SCF_EDA_ADC_CF))
+					&& (EDA_ADC_CI  <= p0->id && p0->id <= EDA_ADC_IN1)
+					&& (EDA_ADC_OUT == p1->id && p1->id <= EDA_ADC_CF))
 				return 0;
 
-			if (SCF_EDA_ADC_NEG != p1->id)
+			if (EDA_ADC_NEG != p1->id)
 				return 1;
 		}
 	}
@@ -301,7 +301,7 @@ static int __ttl_adc_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 static int __ttl_adc_shared(ScfEpin* p, int flags)
 {
 	if (!flags) {
-		if (SCF_EDA_ADC_OUT == p->id && p->id <= SCF_EDA_ADC_CF)
+		if (EDA_ADC_OUT == p->id && p->id <= EDA_ADC_CF)
 			return 0;
 	}
 	return 1;
@@ -309,20 +309,20 @@ static int __ttl_adc_shared(ScfEpin* p, int flags)
 
 static int __741_op_amp_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 {
-	if (SCF_EDA_OP_AMP_NEG == p0->id)
+	if (EDA_OP_AMP_NEG == p0->id)
 		return 1;
 
-	if (SCF_EDA_OP_AMP_POS == p0->id) {
-		if (p1 && (SCF_EDA_OP_AMP_IN == p1->id || SCF_EDA_OP_AMP_INVERT == p1->id))
+	if (EDA_OP_AMP_POS == p0->id) {
+		if (p1 && (EDA_OP_AMP_IN == p1->id || EDA_OP_AMP_INVERT == p1->id))
 			return 1;
 	} else {
 		if (p1) {
 			if (!flags
-					&& (SCF_EDA_OP_AMP_IN == p0->id || SCF_EDA_OP_AMP_INVERT == p0->id)
-					&&  SCF_EDA_OP_AMP_OUT == p1->id)
+					&& (EDA_OP_AMP_IN == p0->id || EDA_OP_AMP_INVERT == p0->id)
+					&&  EDA_OP_AMP_OUT == p1->id)
 				return 0;
 
-			if (SCF_EDA_OP_AMP_NEG != p1->id)
+			if (EDA_OP_AMP_NEG != p1->id)
 				return 1;
 		}
 	}
@@ -332,7 +332,7 @@ static int __741_op_amp_path_off(ScfEpin* p0, ScfEpin* p1, int flags)
 static int __741_op_amp_shared(ScfEpin* p, int flags)
 {
 	if (!flags) {
-		if (SCF_EDA_OP_AMP_OUT == p->id)
+		if (EDA_OP_AMP_OUT == p->id)
 			return 0;
 	}
 	return 1;
@@ -417,52 +417,52 @@ static ScfEops __741_op_amp_ops =
 
 static ScfEdata  component_datas[] =
 {
-	{SCF_EDA_None,       0,                   0, 0, 0,    0,   0,   0, 0, 0,   NULL, NULL, NULL},
-	{SCF_EDA_Battery,    0,                   0, 5, 0, 1e-9, 1e9,   0, 0, 0,   NULL, NULL, NULL},
-	{SCF_EDA_Signal,     0,                   0, 0, 0, 1e-9, 1e9,   0, 0, 0,   NULL, NULL, NULL},
+	{EDA_None,       0,                   0, 0, 0,    0,   0,   0, 0, 0,   NULL, NULL, NULL},
+	{EDA_Battery,    0,                   0, 5, 0, 1e-9, 1e9,   0, 0, 0,   NULL, NULL, NULL},
+	{EDA_Signal,     0,                   0, 0, 0, 1e-9, 1e9,   0, 0, 0,   NULL, NULL, NULL},
 
-	{SCF_EDA_Resistor,   0,                   0, 0, 0,  1e4,   0,   0, 0, 0,   NULL, NULL, NULL},
-	{SCF_EDA_Capacitor,  0,                   0, 0, 0,   10, 0.1,   0, 0, 0,   NULL, NULL, NULL},
-	{SCF_EDA_Inductor,   0,                   0, 0, 0,   10,   0, 1e3, 0, 0,   NULL, NULL, NULL},
+	{EDA_Resistor,   0,                   0, 0, 0,  1e4,   0,   0, 0, 0,   NULL, NULL, NULL},
+	{EDA_Capacitor,  0,                   0, 0, 0,   10, 0.1,   0, 0, 0,   NULL, NULL, NULL},
+	{EDA_Inductor,   0,                   0, 0, 0,   10,   0, 1e3, 0, 0,   NULL, NULL, NULL},
 
-	{SCF_EDA_Diode,      0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__diode_ops, NULL, "./cpk/9013.txt"},
-	{SCF_EDA_NPN,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__npn_ops,   NULL, "./cpk/9013.txt"},
-	{SCF_EDA_PNP,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__pnp_ops,   NULL, "./cpk/9012.txt"},
+	{EDA_Diode,      0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__diode_ops, NULL, "./cpk/9013.txt"},
+	{EDA_NPN,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__npn_ops,   NULL, "./cpk/9013.txt"},
+	{EDA_PNP,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__pnp_ops,   NULL, "./cpk/9012.txt"},
 
-	{SCF_EDA_NAND,       0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_nand_ops, "./cpk/ttl_nand.cpk", NULL},
-	{SCF_EDA_NOT,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_not_ops,  "./cpk/ttl_not.cpk",  NULL},
-	{SCF_EDA_AND,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_and.cpk",  NULL},
-	{SCF_EDA_OR,         0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_or.cpk",   NULL},
-	{SCF_EDA_NOR,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_nor.cpk",  NULL},
-	{SCF_EDA_XOR,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_xor.cpk",  NULL},
-	{SCF_EDA_DFF,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_dff.cpk",  NULL},
+	{EDA_NAND,       0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_nand_ops, "./cpk/ttl_nand.cpk", NULL},
+	{EDA_NOT,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_not_ops,  "./cpk/ttl_not.cpk",  NULL},
+	{EDA_AND,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_and.cpk",  NULL},
+	{EDA_OR,         0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_or.cpk",   NULL},
+	{EDA_NOR,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_nor.cpk",  NULL},
+	{EDA_XOR,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_xor.cpk",  NULL},
+	{EDA_DFF,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_gate_ops, "./cpk/ttl_dff.cpk",  NULL},
 
-	{SCF_EDA_ADD,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_add_ops,  "./cpk/ttl_add.cpk",  NULL},
-	{SCF_EDA_ADC,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_adc_ops,  "./cpk/ttl_adc.cpk",  NULL},
+	{EDA_ADD,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_add_ops,  "./cpk/ttl_add.cpk",  NULL},
+	{EDA_ADC,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_adc_ops,  "./cpk/ttl_adc.cpk",  NULL},
 
-	{SCF_EDA_NAND4,      0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_nand4_ops,   "./cpk/ttl_nand4.cpk",   NULL},
-	{SCF_EDA_AND2_OR,    0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_and2_or_ops, "./cpk/ttl_and2_or.cpk", NULL},
-	{SCF_EDA_IF,         0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_if_ops,      "./cpk/ttl_if.cpk",      NULL},
-	{SCF_EDA_MLA,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_mla_ops,     "./cpk/ttl_mla.cpk",     NULL},
+	{EDA_NAND4,      0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_nand4_ops,   "./cpk/ttl_nand4.cpk",   NULL},
+	{EDA_AND2_OR,    0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_and2_or_ops, "./cpk/ttl_and2_or.cpk", NULL},
+	{EDA_IF,         0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_if_ops,      "./cpk/ttl_if.cpk",      NULL},
+	{EDA_MLA,        0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_mla_ops,     "./cpk/ttl_mla.cpk",     NULL},
 
-	{SCF_EDA_NOT,        SCF_EDA_TTL_DELAY,   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_not_ops,     "./cpk/ttl_not_delay.cpk", NULL},
+	{EDA_NOT,        EDA_TTL_DELAY,   0, 0, 0,    0,   0,   0, 0, 0,   &__ttl_not_ops,     "./cpk/ttl_not_delay.cpk", NULL},
 
-	{SCF_EDA_OP_AMP,     0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__741_op_amp_ops, "./cpk/op_amp_f007.cpk",   NULL},
+	{EDA_OP_AMP,     0,                   0, 0, 0,    0,   0,   0, 0, 0,   &__741_op_amp_ops, "./cpk/op_amp_f007.cpk",   NULL},
 
-	{SCF_EDA_Crystal,    0,                   0, 0, 0,    0,   0,   0, 0, 1e7, NULL,              "./cpk/crystal.cpk",       NULL},
+	{EDA_Crystal,    0,                   0, 0, 0,    0,   0,   0, 0, 1e7, NULL,              "./cpk/crystal.cpk",       NULL},
 };
 
 static ScfEdata  pin_datas[] =
 {
-	{SCF_EDA_None,       0,                   0, 0, 0,    0,   0,   0,   0, 0, NULL, NULL, NULL},
+	{EDA_None,       0,                   0, 0, 0,    0,   0,   0,   0, 0, NULL, NULL, NULL},
 
-	{SCF_EDA_Diode,      0,   SCF_EDA_Diode_NEG, 0, 0,  750,   0,   0,   0, 0, NULL, NULL, NULL},
+	{EDA_Diode,      0,   EDA_Diode_NEG, 0, 0,  750,   0,   0,   0, 0, NULL, NULL, NULL},
 
-	{SCF_EDA_NPN,        0,       SCF_EDA_NPN_B, 0, 0,  750,   0,   0,   0, 0, NULL, NULL, NULL},
-	{SCF_EDA_NPN,        0,       SCF_EDA_NPN_C, 0, 0,    3,   0,   0, 200, 0, NULL, NULL, NULL},
+	{EDA_NPN,        0,       EDA_NPN_B, 0, 0,  750,   0,   0,   0, 0, NULL, NULL, NULL},
+	{EDA_NPN,        0,       EDA_NPN_C, 0, 0,    3,   0,   0, 200, 0, NULL, NULL, NULL},
 
-	{SCF_EDA_PNP,        0,       SCF_EDA_PNP_B, 0, 0,  750,   0,   0,   0, 0, NULL, NULL, NULL},
-	{SCF_EDA_PNP,        0,       SCF_EDA_PNP_C, 0, 0,    3,   0,   0, 200, 0, NULL, NULL, NULL},
+	{EDA_PNP,        0,       EDA_PNP_B, 0, 0,  750,   0,   0,   0, 0, NULL, NULL, NULL},
+	{EDA_PNP,        0,       EDA_PNP_C, 0, 0,    3,   0,   0, 200, 0, NULL, NULL, NULL},
 };
 
 static ScfEdata* _pin_find_data(const uint64_t type, const uint64_t model, const uint64_t pid)
@@ -480,7 +480,7 @@ static ScfEdata* _pin_find_data(const uint64_t type, const uint64_t model, const
 	return NULL;
 }
 
-ScfEdata* scf_ecomponent__find_data(const uint64_t type, const uint64_t model)
+ScfEdata* ecomponent__find_data(const uint64_t type, const uint64_t model)
 {
 	ScfEdata* ed;
 
@@ -495,14 +495,14 @@ ScfEdata* scf_ecomponent__find_data(const uint64_t type, const uint64_t model)
 	return NULL;
 }
 
-ScfEconn* scf_econn__alloc()
+ScfEconn* econn__alloc()
 {
 	ScfEconn* ec = calloc(1, sizeof(ScfEconn));
 
 	return ec;
 }
 
-int scf_econn__add_cid(ScfEconn* ec, uint64_t cid)
+int econn__add_cid(ScfEconn* ec, uint64_t cid)
 {
 	if (!ec)
 		return -EINVAL;
@@ -522,7 +522,7 @@ int scf_econn__add_cid(ScfEconn* ec, uint64_t cid)
 	return 0;
 }
 
-int scf_econn__del_cid(ScfEconn* ec, uint64_t cid)
+int econn__del_cid(ScfEconn* ec, uint64_t cid)
 {
 	if (!ec)
 		return -EINVAL;
@@ -552,14 +552,14 @@ int scf_econn__del_cid(ScfEconn* ec, uint64_t cid)
 	return -EINVAL;
 }
 
-ScfEline* scf_eline__alloc()
+ScfEline* eline__alloc()
 {
 	ScfEline* l = calloc(1, sizeof(ScfEline));
 
 	return l;
 }
 
-int scf_eline__add_line(ScfEline* el, ScfLine*  l)
+int eline__add_line(ScfEline* el, ScfLine*  l)
 {
 	if (!el || !l)
 		return -EINVAL;
@@ -579,7 +579,7 @@ int scf_eline__add_line(ScfEline* el, ScfLine*  l)
 	return 0;
 }
 
-int scf_eline__del_line(ScfEline* el, ScfLine* l)
+int eline__del_line(ScfEline* el, ScfLine* l)
 {
 	if (!el || !l)
 		return -EINVAL;
@@ -609,7 +609,7 @@ int scf_eline__del_line(ScfEline* el, ScfLine* l)
 	return -EINVAL;
 }
 
-int scf_eline__add_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
+int eline__add_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
 {
 	if (!el)
 		return -EINVAL;
@@ -630,7 +630,7 @@ int scf_eline__add_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
 	return 0;
 }
 
-int scf_eline__del_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
+int eline__del_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
 {
 	if (!el)
 		return -EINVAL;
@@ -660,7 +660,7 @@ int scf_eline__del_pin(ScfEline* el, uint64_t  cid, uint64_t pid)
 	return -EINVAL;
 }
 
-int scf_eline__add_conn(ScfEline* el, ScfEconn* ec)
+int eline__add_conn(ScfEline* el, ScfEconn* ec)
 {
 	if (!el || !ec)
 		return -EINVAL;
@@ -680,7 +680,7 @@ int scf_eline__add_conn(ScfEline* el, ScfEconn* ec)
 	return 0;
 }
 
-int scf_eline__del_conn(ScfEline* el, ScfEconn* ec)
+int eline__del_conn(ScfEline* el, ScfEconn* ec)
 {
 	if (!el || !ec)
 		return -EINVAL;
@@ -710,7 +710,7 @@ int scf_eline__del_conn(ScfEline* el, ScfEconn* ec)
 	return -EINVAL;
 }
 
-ScfEpin* scf_epin__alloc()
+ScfEpin* epin__alloc()
 {
 	ScfEpin* p = calloc(1, sizeof(ScfEpin));
 	if (p)
@@ -719,7 +719,7 @@ ScfEpin* scf_epin__alloc()
 	return p;
 }
 
-int scf_epin__add_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
+int epin__add_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
 {
 	if (!pin)
 		return -EINVAL;
@@ -740,7 +740,7 @@ int scf_epin__add_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
 	return 0;
 }
 
-int scf_epin__del_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
+int epin__del_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
 {
 	if (!pin)
 		return -EINVAL;
@@ -770,12 +770,12 @@ int scf_epin__del_component(ScfEpin* pin, uint64_t cid, uint64_t pid)
 	return -EINVAL;
 }
 
-ScfEcomponent* scf_ecomponent__alloc(uint64_t type)
+ScfEcomponent* ecomponent__alloc(uint64_t type)
 {
 	ScfEcomponent* c;
 	ScfEdata*      ed;
 
-	if (type >= SCF_EDA_Components_NB)
+	if (type >= EDA_Components_NB)
 		return NULL;
 
 	c = calloc(1, sizeof(ScfEcomponent));
@@ -785,7 +785,7 @@ ScfEcomponent* scf_ecomponent__alloc(uint64_t type)
 	c->type      = type;
 	c->mirror_id = -1;
 
-	ed = scf_ecomponent__find_data(c->type, c->model);
+	ed = ecomponent__find_data(c->type, c->model);
 	if (ed) {
 		c->v   = ed->v;
 		c->a   = ed->a;
@@ -799,7 +799,7 @@ ScfEcomponent* scf_ecomponent__alloc(uint64_t type)
 	int i;
 	for (i = 0; i < component_pins[type]; i++) {
 
-		ScfEpin* pin = scf_epin__alloc();
+		ScfEpin* pin = epin__alloc();
 		if (!pin) {
 			ScfEcomponent_free(c);
 			return NULL;
@@ -808,9 +808,9 @@ ScfEcomponent* scf_ecomponent__alloc(uint64_t type)
 		pin->id     = i;
 		pin->ic_lid = -1;
 
-		scf_logd("pin %p, id: %ld, ic_lid: %ld\n", pin, pin->id, pin->ic_lid);
+		logd("pin %p, id: %ld, ic_lid: %ld\n", pin, pin->id, pin->ic_lid);
 
-		if (scf_ecomponent__add_pin(c, pin) < 0) {
+		if (ecomponent__add_pin(c, pin) < 0) {
 			ScfEcomponent_free(c);
 			ScfEpin_free(pin);
 			return NULL;
@@ -830,7 +830,7 @@ ScfEcomponent* scf_ecomponent__alloc(uint64_t type)
 	return c;
 }
 
-int scf_ecomponent__add_curve(ScfEcomponent* c, ScfEcurve* curve)
+int ecomponent__add_curve(ScfEcomponent* c, ScfEcurve* curve)
 {
 	if (!c || !curve)
 		return -EINVAL;
@@ -844,7 +844,7 @@ int scf_ecomponent__add_curve(ScfEcomponent* c, ScfEcurve* curve)
 	return 0;
 }
 
-int scf_ecomponent__add_pin(ScfEcomponent* c, ScfEpin* pin)
+int ecomponent__add_pin(ScfEcomponent* c, ScfEpin* pin)
 {
 	if (!c || !pin)
 		return -EINVAL;
@@ -858,7 +858,7 @@ int scf_ecomponent__add_pin(ScfEcomponent* c, ScfEpin* pin)
 	return 0;
 }
 
-int scf_ecomponent__del_pin(ScfEcomponent* c, ScfEpin* pin)
+int ecomponent__del_pin(ScfEcomponent* c, ScfEpin* pin)
 {
 	if (!c)
 		return -EINVAL;
@@ -888,7 +888,7 @@ int scf_ecomponent__del_pin(ScfEcomponent* c, ScfEpin* pin)
 	return -EINVAL;
 }
 
-ScfEfunction*  scf_efunction__alloc(const char* name)
+ScfEfunction*  efunction__alloc(const char* name)
 {
 	ScfEfunction* f = calloc(1, sizeof(ScfEfunction));
 	if (!f)
@@ -905,7 +905,7 @@ ScfEfunction*  scf_efunction__alloc(const char* name)
 	return f;
 }
 
-int scf_efunction__add_component(ScfEfunction* f, ScfEcomponent* c)
+int efunction__add_component(ScfEfunction* f, ScfEcomponent* c)
 {
 	if (!f || !c)
 		return -EINVAL;
@@ -935,7 +935,7 @@ static int __efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
 		for (j = 0; j + 1 < el->n_pins; ) {
 
 			if (el->pins[j] == c->id)
-				assert(0 == scf_eline__del_pin(el, c->id, el->pins[j + 1]));
+				assert(0 == eline__del_pin(el, c->id, el->pins[j + 1]));
 			else {
 				if (el->pins[j] > c->id)
 					el->pins[j]--;
@@ -960,7 +960,7 @@ static int __efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
 			for (k = 0; k + 1 < p->n_tos; ) {
 
 				if (p->tos[k] == c->id)
-					assert(0 == scf_epin__del_component(p, c->id, p->tos[k + 1]));
+					assert(0 == epin__del_component(p, c->id, p->tos[k + 1]));
 				else {
 					if (p->tos[k] > c->id)
 						p->tos[k]--;
@@ -975,7 +975,7 @@ static int __efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
 	}
 }
 
-int scf_efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
+int efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
 {
 	if (!f || !c)
 		return -EINVAL;
@@ -1006,7 +1006,7 @@ int scf_efunction__del_component(ScfEfunction* f, ScfEcomponent* c)
 	return -EINVAL;
 }
 
-int scf_efunction__add_eline(ScfEfunction* f, ScfEline* el)
+int efunction__add_eline(ScfEfunction* f, ScfEline* el)
 {
 	if (!f || !el)
 		return -EINVAL;
@@ -1020,7 +1020,7 @@ int scf_efunction__add_eline(ScfEfunction* f, ScfEline* el)
 	return 0;
 }
 
-int scf_efunction__del_eline(ScfEfunction* f, ScfEline* el)
+int efunction__del_eline(ScfEfunction* f, ScfEline* el)
 {
 	if (!f || !el)
 		return -EINVAL;
@@ -1050,14 +1050,14 @@ int scf_efunction__del_eline(ScfEfunction* f, ScfEline* el)
 	return -EINVAL;
 }
 
-ScfEboard* scf_eboard__alloc()
+ScfEboard* eboard__alloc()
 {
 	ScfEboard* b = calloc(1, sizeof(ScfEboard));
 
 	return b;
 }
 
-int scf_eboard__add_function(ScfEboard* b, ScfEfunction* f)
+int eboard__add_function(ScfEboard* b, ScfEfunction* f)
 {
 	if (!b || !f)
 		return -EINVAL;
@@ -1071,7 +1071,7 @@ int scf_eboard__add_function(ScfEboard* b, ScfEfunction* f)
 	return 0;
 }
 
-int scf_eboard__del_function(ScfEboard* b, ScfEfunction* f)
+int eboard__del_function(ScfEboard* b, ScfEfunction* f)
 {
 	if (!b)
 		return -EINVAL;
@@ -1120,7 +1120,7 @@ static int epin_cmp(const void* v0, const void* v1)
 	return 0;
 }
 
-int scf_pins_same_line(ScfEfunction* f)
+int pins_same_line(ScfEfunction* f)
 {
 	ScfEcomponent* c;
 	ScfEline*      el;
@@ -1146,7 +1146,7 @@ int scf_pins_same_line(ScfEfunction* f)
 
 			for (k = 0; k + 1 < p->n_tos; k += 2) {
 				if (p->tos[k] == c->id)
-					scf_logw("c%ldp%ld connect to its own pin %ld\n", c->id, p->id, p->tos[k + 1]);
+					logw("c%ldp%ld connect to its own pin %ld\n", c->id, p->id, p->tos[k + 1]);
 			}
 
 			for (k = 0; k < f->n_elines; k++) {
@@ -1173,38 +1173,38 @@ int scf_pins_same_line(ScfEfunction* f)
 						n += 2;
 
 					else {
-						if (scf_eline__add_pin(el, p->cid, p->id) < 0)
+						if (eline__add_pin(el, p->cid, p->id) < 0)
 							return -ENOMEM;
 
 						p ->lid    = el->id;
 						p ->c_lid  = el->id;
 						el->flags |= p->flags;
 
-						if (p->flags & (SCF_EDA_PIN_IN | SCF_EDA_PIN_OUT | SCF_EDA_PIN_SHIFT))
+						if (p->flags & (EDA_PIN_IN | EDA_PIN_OUT | EDA_PIN_SHIFT))
 							el->io_lid = p->io_lid;
 						goto next;
 					}
 				}
 			}
 
-			el = scf_eline__alloc();
+			el = eline__alloc();
 			if (!el)
 				return -ENOMEM;
 			el->id = f->n_elines;
 
-			if (scf_efunction__add_eline(f, el) < 0) {
+			if (efunction__add_eline(f, el) < 0) {
 				ScfEline_free(el);
 				return -ENOMEM;
 			}
 
-			if (scf_eline__add_pin(el, p->cid, p->id) < 0)
+			if (eline__add_pin(el, p->cid, p->id) < 0)
 				return -ENOMEM;
 
 			p ->lid    = el->id;
 			p ->c_lid  = el->id;
 			el->flags |= p->flags;
 
-			if (p->flags & (SCF_EDA_PIN_IN | SCF_EDA_PIN_OUT | SCF_EDA_PIN_SHIFT))
+			if (p->flags & (EDA_PIN_IN | EDA_PIN_OUT | EDA_PIN_SHIFT))
 				el->io_lid = p->io_lid;
 next:
 			for (n = 0; n + 1 < p->n_tos; n += 2) {
@@ -1221,19 +1221,19 @@ next:
 					continue;
 
 				if (el2->id < el->id)
-					SCF_XCHG(el2, el);
+					XCHG(el2, el);
 
 				for (m = 0; m + 1 < el2->n_pins; m += 2) {
 					p2 = f->components[el2->pins[m]]->pins[el2->pins[m + 1]];
 
-					if (scf_eline__add_pin(el, p2->cid, p2->id) < 0)
+					if (eline__add_pin(el, p2->cid, p2->id) < 0)
 						return -ENOMEM;
 
 					p2->lid    = el->id;
 					p2->c_lid  = el->id;
 					el->flags |= p2->flags;
 
-					if (p2->flags & (SCF_EDA_PIN_IN | SCF_EDA_PIN_OUT | SCF_EDA_PIN_SHIFT))
+					if (p2->flags & (EDA_PIN_IN | EDA_PIN_OUT | EDA_PIN_SHIFT))
 						el->io_lid = p2->io_lid;
 				}
 
@@ -1249,7 +1249,7 @@ next:
 		el        = f->elines[i];
 
 		if (0 == el->n_pins) {
-			scf_efunction__del_eline(f, el);
+			efunction__del_eline(f, el);
 			ScfEline_free(el);
 			continue;
 		}
@@ -1280,19 +1280,19 @@ next:
 				eid = p->ic_lid;
 
 			else if (eid != p->ic_lid) {
-				scf_loge("IC pin number set error, prev: %ld, current: %ld\n", eid, p->ic_lid);
+				loge("IC pin number set error, prev: %ld, current: %ld\n", eid, p->ic_lid);
 				return -EINVAL;
 			}
 
-			scf_logd("pin j: %ld, c%ldp%ld\n", j, el->pins[j], el->pins[j + 1]);
+			logd("pin j: %ld, c%ldp%ld\n", j, el->pins[j], el->pins[j + 1]);
 		}
 
 		if (eid >= f->n_elines) {
-			scf_loge("IC pin number set error, max: %ld, current: %ld\n", f->n_elines - 1, eid);
+			loge("IC pin number set error, max: %ld, current: %ld\n", f->n_elines - 1, eid);
 			return -EINVAL;
 		}
 
-		scf_logd("i: %ld, eid: %ld\n", i, eid);
+		logd("i: %ld, eid: %ld\n", i, eid);
 
 		if (eid >= 0 && eid != i) {
 			el->id = eid;
@@ -1306,7 +1306,7 @@ next:
 				p->c_lid = eid;
 			}
 
-			SCF_XCHG(f->elines[eid], f->elines[i]);
+			XCHG(f->elines[eid], f->elines[i]);
 			continue;
 		}
 
@@ -1316,7 +1316,7 @@ next:
 	return 0;
 }
 
-void scf_efunction_find_pin(ScfEfunction* f, ScfEcomponent** pc, ScfEpin** pp, int x, int y)
+void efunction_find_pin(ScfEfunction* f, ScfEcomponent** pc, ScfEpin** pp, int x, int y)
 {
 	ScfEcomponent*  c;
 	ScfEpin*        p;
@@ -1327,7 +1327,7 @@ void scf_efunction_find_pin(ScfEfunction* f, ScfEcomponent** pc, ScfEpin** pp, i
 	for (i = 0; i < f->n_components; i++) {
 		c  =        f->components[i];
 
-		scf_logd("c%ld, c->x: %d, c->y: %d, c->w: %d, c->h: %d, x: %d, y: %d\n", c->id, c->x, c->y, c->w, c->y, x, y);
+		logd("c%ld, c->x: %d, c->y: %d, c->w: %d, c->h: %d, x: %d, y: %d\n", c->id, c->x, c->y, c->w, c->y, x, y);
 		if (x > c->x - c->w / 2
 				&& x < c->x + c->w / 2
 				&& y > c->y - c->h / 2
@@ -1335,7 +1335,7 @@ void scf_efunction_find_pin(ScfEfunction* f, ScfEcomponent** pc, ScfEpin** pp, i
 			*pc = c;
 			*pp = NULL;
 
-			scf_logd("c%ld, %d,%d, x: %d, y: %d\n", c->id, c->x, c->y, x, y);
+			logd("c%ld, %d,%d, x: %d, y: %d\n", c->id, c->x, c->y, x, y);
 			return;
 		}
 
@@ -1349,20 +1349,20 @@ void scf_efunction_find_pin(ScfEfunction* f, ScfEcomponent** pc, ScfEpin** pp, i
 				*pc = c;
 				*pp = p;
 
-				scf_logi("c%ldp%ld, %d,%d, x: %d, y: %d\n", c->id, p->id, p->x, p->y, x, y);
+				logi("c%ldp%ld, %d,%d, x: %d, y: %d\n", c->id, p->id, p->x, p->y, x, y);
 				return;
 			}
 		}
 	}
 }
 
-int scf_epin_in_line(int px, int py, int x0, int y0, int x1, int y1)
+int epin_in_line(int px, int py, int x0, int y0, int x1, int y1)
 {
 	if (x0 == x1) {
 		if (x0 - 5 < px && px < x0 + 5) {
 
 			if (y0 > y1)
-				SCF_XCHG(y0, y1);
+				XCHG(y0, y1);
 
 			if (y0 - 5 < py && py < y1 + 5)
 				return 1;
@@ -1371,15 +1371,15 @@ int scf_epin_in_line(int px, int py, int x0, int y0, int x1, int y1)
 		if (y0 - 5 < py && py < y0 + 5) {
 
 			if (x0 > x1)
-				SCF_XCHG(x0, x1);
+				XCHG(x0, x1);
 
 			if (x0 - 5 < px && px < x1 + 5)
 				return 1;
 		}
 	} else {
 		if (x0 > x1) {
-			SCF_XCHG(x0, x1);
-			SCF_XCHG(y0, y1);
+			XCHG(x0, x1);
+			XCHG(y0, y1);
 		}
 
 		double Y0 = y0;
@@ -1403,7 +1403,7 @@ int scf_epin_in_line(int px, int py, int x0, int y0, int x1, int y1)
 				&& y > Y0 - 5
 				&& y < Y1 + 5
 				&& d < 5) {
-			scf_logi("--- k: %lg, px: %d, py: %d, x: %lg, y: %lg, d: %lg, (%d,%d)-->(%d,%d)\n", k, px, py, x, y, d, x0, y0, x1, y1);
+			logi("--- k: %lg, px: %d, py: %d, x: %lg, y: %lg, d: %lg, (%d,%d)-->(%d,%d)\n", k, px, py, x, y, d, x0, y0, x1, y1);
 			return 1;
 		}
 	}
@@ -1411,7 +1411,7 @@ int scf_epin_in_line(int px, int py, int x0, int y0, int x1, int y1)
 	return 0;
 }
 
-void scf_efunction_find_eline(ScfEfunction* f, ScfEline** pel, ScfLine** pl, int x, int y)
+void efunction_find_eline(ScfEfunction* f, ScfEline** pel, ScfLine** pl, int x, int y)
 {
 	ScfEline*  el;
 	ScfLine*   l;
@@ -1425,9 +1425,9 @@ void scf_efunction_find_eline(ScfEfunction* f, ScfEline** pel, ScfLine** pl, int
 		for (j = el->n_lines - 1; j >= 0; j--) {
 			l  = el->lines[j];
 
-			if (scf_epin_in_line(x, y, l->x0, l->y0, l->x1, l->y1)) {
+			if (epin_in_line(x, y, l->x0, l->y0, l->x1, l->y1)) {
 
-				scf_logi("j: %ld, (%d, %d)-->(%d, %d), x: %d, y: %d\n", j, l->x0, l->y0, l->x1, l->y1, x, y);
+				logi("j: %ld, (%d, %d)-->(%d, %d), x: %d, y: %d\n", j, l->x0, l->y0, l->x1, l->y1, x, y);
 
 				*pel = el;
 				*pl  = l;
@@ -1437,7 +1437,7 @@ void scf_efunction_find_eline(ScfEfunction* f, ScfEline** pel, ScfLine** pl, int
 	}
 }
 
-long scf_find_eline_index(ScfEfunction* f, int64_t lid)
+long find_eline_index(ScfEfunction* f, int64_t lid)
 {
 	ScfEline* el;
 	long      j;
