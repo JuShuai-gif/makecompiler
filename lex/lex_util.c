@@ -1,5 +1,9 @@
 #include "lex.h"
 
+/*
+
+
+*/
 // 从 lex_t 吐出一个char
 char_t *_lex_pop_char(lex_t *lex) {
     assert(lex);
@@ -17,13 +21,15 @@ char_t *_lex_pop_char(lex_t *lex) {
     if (!c)
         return NULL;
 
+    // 得到的是一个字符
     int ret = fgetc(lex->fp);
-
+    // 文件结束符
     if (EOF == ret) {
         c->c = ret;
         return c;
     }
 
+    // 如果是单字节
     if (ret < 0x80) {
         c->c = ret;
         c->len = 1;
@@ -55,7 +61,7 @@ char_t *_lex_pop_char(lex_t *lex) {
     c->utf8[0] = ret;
 
     int i;
-    for (i = 0; i < c->len; i++) {
+    for (i = 1; i < c->len; i++) {
         ret = fgetc(lex->fp);
 
         if (0x2 == (ret >> 6)) {

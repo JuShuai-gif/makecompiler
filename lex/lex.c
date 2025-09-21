@@ -113,12 +113,13 @@ static int _find_escape_char(const int c) {
 }
 
 // 根据参数 path 读取到 plex
-int lex_open(lex_t **plex, const char *path) {
+int lex_open(lex_t **plex, const char *path) { 
     if (!plex || !path)
         return -EINVAL; // 错误参数
 
     // 分配一个 lex_t 空间
     lex_t *lex = calloc(1, sizeof(lex_t));
+    printf("%p",lex);
     if (!lex)
         return -ENOMEM;
 
