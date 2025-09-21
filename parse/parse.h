@@ -21,7 +21,7 @@ typedef struct dfa_data_s    dfa_data_t;
 
 struct parse_s
 {
-	lex_t*         lex_list;
+	lex_t*         lex_list;// 分词器
 	lex_t*         lex;
 
 	ast_t*         ast;

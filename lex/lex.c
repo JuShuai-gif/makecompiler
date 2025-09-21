@@ -658,6 +658,7 @@ int __lex_pop_word(lex_t *lex, lex_word_t **pword) {
 
     c = _lex_pop_char(lex);
 
+    // 如果遇到 换行 制表符 空格 等一些符号时，表示它是一个单词的结尾
     while ('\n' == c->c
            || '\r' == c->c || '\t' == c->c
            || ' ' == c->c || '\\' == c->c) {
@@ -680,7 +681,7 @@ int __lex_pop_word(lex_t *lex, lex_word_t **pword) {
         free(c);
         c = _lex_pop_char(lex);
     }
-
+    // 文件末尾
     if (EOF == c->c) {
         w = lex_word_alloc(lex->file, lex->nb_lines, lex->pos, LEX_WORD_EOF);
         w->text = string_cstr("eof");

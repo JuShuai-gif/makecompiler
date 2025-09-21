@@ -1,8 +1,21 @@
 #include "lex.h"
 
 /*
+其实 fgetc()一次吐出一个字节，但是有的字符可能是由多个字节组成的，所以需要分别处理
 
+在 ASCII (ret < 0x80) 下，一个字符就是一个字节，所以 fgetc 得到的字节就是一个完整字符
 
+在 UTF-8、GBK 等多字节编码下,一个“字符”（即一个 Unicode 码点）可能由 多个字节组成
+
+'A' → U+0041
+    UTF-8: 0x41
+    fgetc 一次就拿到完整字符
+
+'中' → U+4E2D
+    UTF-8: E4 B8 AD (三个字节)
+    第一次 fgetc(fp) = 0xE4
+    第二次 fgetc(fp) = 0xB8
+    第三次 fgetc(fp) = 0xAD
 */
 // 从 lex_t 吐出一个char
 char_t *_lex_pop_char(lex_t *lex) {
@@ -233,11 +246,12 @@ int _lex_number_base_10(lex_t *lex, lex_word_t **pword, string_t *s) {
     while (1) {
         c2 = _lex_pop_char(lex);
 
+        // 如果第二个字节也是数字
         if (c2->c >= '0' && c2->c <= '9') {
             num = c2->c - '0';
             value *= 10;
             value += num;
-        } else if ('.' == c2->c) {
+        } else if ('.' == c2->c) {// 如果第二个字符是. 则表示是浮点数
             c3 = _lex_pop_char(lex);
 
             _lex_push_char(lex, c3);
