@@ -1,7 +1,7 @@
 #ifndef ELF_LINK_H
 #define ELF_LINK_H
 
-#include"elf.h"
+#include"ghr_elf.h"
 #include"utils_string.h"
 #include<ar.h>
 

@@ -1,4 +1,4 @@
-#include"elf.h"
+#include"ghr_elf.h"
 #include"dwarf_def.h"
 
 int main(int argc, char* argv[])

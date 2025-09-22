@@ -1,7 +1,7 @@
 #ifndef ELF_NAJA_H
 #define ELF_NAJA_H
 
-#include"elf.h"
+#include"ghr_elf.h"
 #include"elf_native.h"
 #include"utils_vector.h"
 #include"utils_string.h"

@@ -1,7 +1,7 @@
 #ifndef ELF_NATIVE32_H
 #define ELF_NATIVE32_H
 
-#include"elf.h"
+#include"ghr_elf.h"
 #include"utils_vector.h"
 #include"utils_string.h"
 

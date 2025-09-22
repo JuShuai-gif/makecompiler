@@ -1,4 +1,4 @@
-#include"elf.h"
+#include"ghr_elf.h"
 
 int main()
 {

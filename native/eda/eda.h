@@ -10,7 +10,7 @@ typedef struct {
 
 } eda_context_t;
 
-typedef int	(*eda_inst_handler_pt)(native_t* ctx, 3ac_code_t* c);
+typedef int	(*eda_inst_handler_pt)(native_t* ctx, _3ac_code_t* c);
 
 eda_inst_handler_pt  eda_find_inst_handler(const int op_type);
 

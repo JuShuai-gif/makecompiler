@@ -1,7 +1,7 @@
 #include"dwarf.h"
 #include"leb128.h"
 #include"native.h"
-#include"elf.h"
+#include"ghr_elf.h"
 
 dwarf_line_machine_t* dwarf_line_machine_alloc()
 {

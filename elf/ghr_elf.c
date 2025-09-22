@@ -1,4 +1,4 @@
-#include"elf.h"
+#include"ghr_elf.h"
 
 extern elf_ops_t	elf_ops_x64;
 extern elf_ops_t	elf_ops_arm64;

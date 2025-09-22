@@ -5,7 +5,7 @@
 #include "x64_util.h"
 #include "x64_reg.h"
 #include "x64_opcode.h"
-#include "graph.h"
+#include "utils_graph.h"
 #include "elf.h"
 
 #define X64_INST_ADD_CHECK(vec, inst)        \

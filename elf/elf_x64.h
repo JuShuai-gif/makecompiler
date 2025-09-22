@@ -1,7 +1,7 @@
 #ifndef ELF_X64_H
 #define ELF_X64_H
 
-#include"elf.h"
+#include"ghr_elf.h"
 #include"elf_native.h"
 
 int  __x64_elf_add_dyn (elf_native_t* x64, const char* sysroot);

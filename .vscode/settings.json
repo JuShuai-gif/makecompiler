@@ -26,6 +26,11 @@
         "dwarf.h": "c",
         "elf_link.h": "c",
         "elf_arm64.h": "c",
-        "ar.h": "c"
+        "ar.h": "c",
+        "x64.h": "c",
+        "eda.h": "c",
+        "eda_pack.h": "c",
+        "pack.h": "c",
+        "ghr_elf.h": "c"
     }
 }

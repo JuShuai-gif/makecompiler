@@ -116,7 +116,7 @@ static int _find_sym(const void *v0, const void *v1) {
     return strcmp(name, sym->name);
 }
 
-static int _ parse_add_sym(parse_t *parse, const char *name,
+static int _parse_add_sym(parse_t *parse, const char *name,
                            uint64_t st_size, Elf64_Addr st_value,
                            uint16_t st_shndx, uint8_t st_info) {
     elf_sym_t *sym = NULL;
@@ -895,7 +895,7 @@ static int _fill_code_list_inst(string_t *code, list_t *h, int64_t offset, parse
     uint32_t line2 = 0;
 
     for (l = list_head(h); l != list_sentinel(h); l = list_next(l)) {
-        3ac_code_t *c = list_data(l, 3ac_code_t, list);
+        _3ac_code_t *c = list_data(l, _3ac_code_t, list);
 
         if (!c->instructions)
             continue;
@@ -912,7 +912,7 @@ static int _fill_code_list_inst(string_t *code, list_t *h, int64_t offset, parse
         }
 
         if (c->dsts) {
-            3ac_operand_t * dst;
+            _3ac_operand_t * dst;
 
             for (i = 0; i < c->dsts->size; i++) {
                 dst = c->dsts->data[i];
@@ -936,7 +936,7 @@ static int _fill_code_list_inst(string_t *code, list_t *h, int64_t offset, parse
         }
 
         if (c->srcs) {
-            3ac_operand_t * src;
+            _3ac_operand_t * src;
 
             for (i = 0; i < c->srcs->size; i++) {
                 src = c->srcs->data[i];
@@ -1805,15 +1805,15 @@ int parse_compile_functions(parse_t *parse, vector_t *functions) {
 
         ret = function_to_3ac(parse->ast, f, &h);
         if (ret < 0) {
-            list_clear(&h, 3ac_code_t, list, 3ac_code_free);
+            list_clear(&h, _3ac_code_t, list, _3ac_code_free);
             return ret;
         }
 
-        //		  3ac_list_print(&h);
+        //		  _3ac_list_print(&h);
 
-        ret = 3ac_split_basic_blocks(&h, f);
+        ret = _3ac_split_basic_blocks(&h, f);
         if (ret < 0) {
-            list_clear(&h, 3ac_code_t, list, 3ac_code_free);
+            list_clear(&h, _3ac_code_t, list, _3ac_code_free);
             return ret;
         }
 

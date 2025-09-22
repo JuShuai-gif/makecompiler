@@ -5,8 +5,15 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/core",
+                "${workspaceFolder}/coroutine",
+                "${workspaceFolder}/elf",
                 "${workspaceFolder}/lex",
-                "${workspaceFolder}/utils"
+                "${workspaceFolder}/mm",
+                "${workspaceFolder}/native/**",
+                "${workspaceFolder}/parse",
+                "${workspaceFolder}/pack",
+                "${workspaceFolder}/utils",
+                "${workspaceFolder}/vm"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

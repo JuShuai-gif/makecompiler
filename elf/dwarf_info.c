@@ -1,7 +1,7 @@
 #include"dwarf.h"
 #include"leb128.h"
 #include"native.h"
-#include"elf.h"
+#include"ghr_elf.h"
 
 dwarf_info_entry_t* dwarf_info_entry_alloc()
 {
