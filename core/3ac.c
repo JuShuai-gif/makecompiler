@@ -312,7 +312,7 @@ _3ac_code_t *_3ac_alloc_by_src(int op_type, dag_node_t *src) {
         return NULL;
     src0->dag_node = src;
 
-    _vector_t *srcs = _vector_alloc();
+    vector_t *srcs = _vector_alloc();
     if (!srcs)
         goto error1;
     if (_vector_add(srcs, src0) < 0)
@@ -407,7 +407,7 @@ _3ac_code_t *_3ac_jmp_code(int type, label_t *l, node_t *err) {
 }
 
 // 打印节点
-static void _3ac_print_node(_node_t *node) {
+static void _3ac_print_node(node_t *node) {
     if (_type_is_var(node->type)) {
         if (node->var->w) {
             printf("v_%d_%d/%s/%#lx",
@@ -423,7 +423,7 @@ static void _3ac_print_node(_node_t *node) {
             } else
                 printf("v/%#lx", 0xffff & (uintptr_t)node->result);
         }
-    } else if (_FUNCTION == node->type) {
+    } else if (FUNCTION == node->type) {
         printf("f_%d_%d/%s",
                node->w->line, node->w->pos, node->w->text->data);
     } else {
@@ -434,7 +434,7 @@ static void _3ac_print_node(_node_t *node) {
 }
 
 // 打印有向无环图节点
-static void _3ac_print_dag_node(_dag_node_t *dn) {
+static void _3ac_print_dag_node(dag_node_t *dn) {
     if (_type_is_var(dn->type)) {
         if (dn->var->w) {
             printf("v_%d_%d/%s_%#lx ",
@@ -514,10 +514,10 @@ void _3ac_code_print(_3ac_code_t *c, list_t *sentinel) {
 }
 
 // 三地址码转有向无环图
-static int _3ac_code_to_dag(_3ac_code_t *c, _list_t *dag, int nb_operands0, int nb_operands1) {
+static int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag, int nb_operands0, int nb_operands1) {
     _3ac_operand_t *dst;
     _3ac_operand_t *src;
-    _dag_node_t *dn;
+    dag_node_t *dn;
 
     int ret;
     int i;
@@ -607,13 +607,13 @@ int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag) {
         if (OP_ASSIGN == c->op->type && src->dag_node == dst->dag_node)
             return 0;
 
-        _dag_node_t *dn_src;
-        _dag_node_t *dn_parent;
-        _dag_node_t *dn_assign;
-        _variable_t *v_assign = NULL;
+        dag_node_t *dn_src;
+        dag_node_t *dn_parent;
+        dag_node_t *dn_assign;
+        variable_t *v_assign = NULL;
 
         if (dst->node->parent)
-            v_assign = _ _operand_get(dst->node->parent);
+            v_assign = __operand_get(dst->node->parent);
 
         dn_assign = _dag_node_alloc(c->op->type, v_assign, NULL);
 
@@ -639,7 +639,7 @@ int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag) {
     } else if (_type_is_assign_array_index(c->op->type)
                || _type_is_assign_dereference(c->op->type)
                || _type_is_assign_pointer(c->op->type)) {
-        _dag_node_t *assign;
+        dag_node_t *assign;
 
         assert(c->srcs);
 
@@ -666,7 +666,7 @@ int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag) {
         if (ret < 0)
             return ret;
 
-        _dag_node_t *alloc = _dag_node_alloc(c->op->type, NULL, NULL);
+        dag_node_t *alloc = _dag_node_alloc(c->op->type, NULL, NULL);
         if (!alloc)
             return -ENOMEM;
         _list_add_tail(dag, &alloc->list);
@@ -689,7 +689,7 @@ int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag) {
     } else if (OP_3AC_CMP == c->op->type
                || OP_3AC_TEQ == c->op->type
                || OP_3AC_DUMP == c->op->type) {
-        _dag_node_t *dn_cmp = _dag_node_alloc(c->op->type, NULL, NULL);
+        dag_node_t *dn_cmp = _dag_node_alloc(c->op->type, NULL, NULL);
 
         _list_add_tail(dag, &dn_cmp->list);
 
@@ -716,7 +716,7 @@ int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag) {
         assert(c->dsts && 1 == c->dsts->size);
         dst = c->dsts->data[0];
 
-        _dag_node_t *dn_setcc = _dag_node_alloc(c->op->type, NULL, NULL);
+        dag_node_t *dn_setcc = _dag_node_alloc(c->op->type, NULL, NULL);
         _list_add_tail(dag, &dn_setcc->list);
 
         ret = _dag_get_node(dag, dst->node, &dst->dag_node);
@@ -737,8 +737,8 @@ int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag) {
 
         assert(src->node->parent);
 
-        _variable_t *v_parent = _ _operand_get(src->node->parent);
-        _dag_node_t *dn_parent = _dag_node_alloc(c->op->type, v_parent, NULL);
+        variable_t *v_parent = __operand_get(src->node->parent);
+        dag_node_t *dn_parent = _dag_node_alloc(c->op->type, v_parent, NULL);
 
         _list_add_tail(dag, &dn_parent->list);
 
@@ -776,7 +776,7 @@ int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag) {
 
     } else if (OP_RETURN == c->op->type) {
         if (c->srcs) {
-            _dag_node_t *dn = _dag_node_alloc(c->op->type, NULL, NULL);
+            dag_node_t *dn = _dag_node_alloc(c->op->type, NULL, NULL);
 
             _list_add_tail(dag, &dn->list);
 
@@ -835,8 +835,8 @@ int _3ac_code_to_dag(_3ac_code_t *c, list_t *dag) {
 }
 
 // 筛选跳转 jmp
-static void _3ac_filter_jmp(_list_t *h, _3ac_code_t *c) {
-    _list_t *l2 = NULL;
+static void _3ac_filter_jmp(list_t *h, _3ac_code_t *c) {
+    list_t *l2 = NULL;
     _3ac_code_t *c2 = NULL;
     _3ac_operand_t *dst0 = c->dsts->data[0];
     _3ac_operand_t *dst1 = NULL;
