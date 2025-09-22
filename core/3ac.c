@@ -1,7 +1,7 @@
 #include "3ac.h"
 #include "function.h"
 #include "basic_block.h"
-#include "graph.h"
+#include "utils_graph.h"
 
 // 操作符类型
 static _3ac_operand_t _3ac_operators[] = {

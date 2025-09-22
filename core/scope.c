@@ -1,17 +1,21 @@
 #include "ast.h"
 
+// 分配作用域对象
 scope_t *scope_alloc(lex_word_t *w, const char *name) {
+    // 首先为它分配内存空间
     scope_t *scope = calloc(1, sizeof(scope_t));
-
+    // 分配不成功
     if (!scope)
         return NULL;
 
+    // 复制名字
     scope->name = string_cstr(name);
     if (!scope->name) {
         free(scope);
         return NULL;
     }
 
+    // 变量分配空间
     scope->vars = vector_alloc();
     if (!scope->vars) {
         string_free(scope->name);
@@ -19,6 +23,7 @@ scope_t *scope_alloc(lex_word_t *w, const char *name) {
         return NULL;
     }
 
+    // 如果词元存在
     if (w) {
         scope->w = lex_word_clone(w);
 
@@ -30,44 +35,55 @@ scope_t *scope_alloc(lex_word_t *w, const char *name) {
         }
     }
 
+    // 初始化链表
     list_init(&scope->list);
+    // 初始化类型链表
     list_init(&scope->type_list_head);
+    // 运算符重载链表
     list_init(&scope->operator_list_head);
+    // 函数链表
     list_init(&scope->function_list_head);
+    // 标签链表
     list_init(&scope->label_list_head);
     return scope;
 }
 
+// push 变量
 void scope_push_var(scope_t *scope, variable_t *var) {
     assert(scope);
     assert(var);
     vector_add(scope->vars, var);
 }
 
+// push 类型
 void scope_push_type(scope_t *scope, type_t *t) {
     assert(scope);
     assert(t);
     list_add_front(&scope->type_list_head, &t->list);
 }
 
+// push 操作
 void scope_push_operator(scope_t *scope, function_t *op) {
     assert(scope);
     assert(op);
     list_add_front(&scope->operator_list_head, &op->list);
 }
 
+// push 函数
 void scope_push_function(scope_t *scope, function_t *f) {
     assert(scope);
     assert(f);
     list_add_front(&scope->function_list_head, &f->list);
 }
 
+// push 标签
 void scope_push_label(scope_t *scope, label_t *l) {
     assert(scope);
     assert(l);
     list_add_front(&scope->label_list_head, &l->list);
 }
 
+// 释放范围
 void scope_free(scope_t *scope) {
     if (scope) {
         string_free(scope->name);
@@ -87,10 +103,11 @@ void scope_free(scope_t *scope) {
     }
 }
 
+// 寻找类型
 type_t *scope_find_type(scope_t *scope, const char *name) {
     type_t *t;
     list_t *l;
-
+    // 遍历类型列表
     for (l = list_head(&scope->type_list_head); l != list_sentinel(&scope->type_list_head); l != list_next(l)) {
         t = list_data(l, type_t, list);
 
@@ -114,6 +131,7 @@ type_t *scope_find_type_type(scope_t *scope, const int type) {
     return NULL;
 }
 
+// 寻找变量
 variable_t *scope_find_variable(scope_t *scope, const char *name) {
     variable_t *v;
     int i;
@@ -126,6 +144,7 @@ variable_t *scope_find_variable(scope_t *scope, const char *name) {
     return NULL;
 }
 
+// 寻找函数
 function_t *scope_find_function(scope_t *scope, const char *name) {
     function_t *f;
     list_t *l;
@@ -139,6 +158,7 @@ function_t *scope_find_function(scope_t *scope, const char *name) {
     return NULL;
 }
 
+// 寻找相同函数
 function_t *scope_find_same_function(scope_t *scope, function_t *f0) {
     function_t *f1;
     list_t *l;
@@ -232,6 +252,7 @@ int scope_find_like_functions(vector_t **pfunctions, scope_t *scope, const char 
     return 0;
 }
 
+// 寻找标签
 label_t *scope_find_label(scope_t *scope, const char *name) {
     label_t *label;
     list_t *l;

@@ -6,7 +6,7 @@
 #include"risc_reg.h"
 #include"risc_opcode.h"
 #include"graph.h"
-#include"elf.h"
+#include"ghr_elf.h"
 
 #define RISC_INST_ADD_CHECK(vec, inst) \
 			do { \

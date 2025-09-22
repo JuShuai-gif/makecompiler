@@ -5,13 +5,13 @@
 #include "dfa.h"
 #include "basic_block.h"
 #include "optimizer.h"
-#include "elf.h"
+#include "ghr_elf.h"
 #include "leb128.h"
 #include "eda.h"
 
 #define ADD_SECTION_SYMBOL(sh_index, sh_name)                                                             \
     do {                                                                                                  \
-        int ret = _ parse_add_sym(parse, sh_name, 0, 0, sh_index, ELF64_ST_INFO(STB_LOCAL, STT_SECTION)); \
+        int ret = _parse_add_sym(parse, sh_name, 0, 0, sh_index, ELF64_ST_INFO(STB_LOCAL, STT_SECTION));  \
         if (ret < 0) {                                                                                    \
             loge("\n");                                                                                   \
             return ret;                                                                                   \
@@ -52,14 +52,17 @@ base_type_t base_types[] =
         {FUNCTION_PTR, "funcptr", sizeof(void *)},
 };
 
+// 打开解析器
 int parse_open(parse_t **pparse) {
     if (!pparse)
         return -EINVAL;
 
+    // 帮解析器分配一个空间
     parse_t *parse = calloc(1, sizeof(parse_t));
     if (!parse)
         return -EINVAL;
 
+    // 
     if (ast_open(&parse->ast) < 0) {
         loge("\n");
         return -1;
@@ -1312,7 +1315,7 @@ static int _fill_function_inst(string_t *code, function_t *f, int64_t offset, pa
     return 0;
 }
 
-static int _ parse_add_rela(vector_t *relas, parse_t *parse, rela_t *r, const char *name, uint16_t st_shndx) {
+static int _parse_add_rela(vector_t *relas, parse_t *parse, rela_t *r, const char *name, uint16_t st_shndx) {
     elf_rela_t *rela;
 
     int ret;
@@ -1329,7 +1332,7 @@ static int _ parse_add_rela(vector_t *relas, parse_t *parse, rela_t *r, const ch
     }
 
     if (i == parse->symtab->size) {
-        ret = _ parse_add_sym(parse, name, 0, 0, st_shndx, ELF64_ST_INFO(STB_GLOBAL, STT_NOTYPE));
+        ret = _parse_add_sym(parse, name, 0, 0, st_shndx, ELF64_ST_INFO(STB_GLOBAL, STT_NOTYPE));
         if (ret < 0) {
             loge("\n");
             return ret;
@@ -1406,7 +1409,7 @@ static int _fill_data(parse_t *parse, variable_t *v, string_t *data, uint32_t sh
     else
         stb = STB_GLOBAL;
 
-    ret = _ parse_add_sym(parse, name, size, data->len, shndx, ELF64_ST_INFO(stb, STT_OBJECT));
+    ret = _parse_add_sym(parse, name, size, data->len, shndx, ELF64_ST_INFO(stb, STT_OBJECT));
     if (ret < 0)
         return ret;
 
@@ -1418,7 +1421,7 @@ static int _fill_data(parse_t *parse, variable_t *v, string_t *data, uint32_t sh
     return ret;
 }
 
-static int _ parse_add_data_relas(parse_t *parse, elf_context_t *elf) {
+static int _parse_add_data_relas(parse_t *parse, elf_context_t *elf) {
     elf_rela_t *rela;
     ast_rela_t *r;
     function_t *f;
@@ -1529,7 +1532,7 @@ static int _ parse_add_data_relas(parse_t *parse, elf_context_t *elf) {
         }
 
         if (j == parse->symtab->size) {
-            ret = _ parse_add_sym(parse, name, 0, 0, 0, ELF64_ST_INFO(STB_GLOBAL, STT_NOTYPE));
+            ret = _parse_add_sym(parse, name, 0, 0, 0, ELF64_ST_INFO(STB_GLOBAL, STT_NOTYPE));
             if (ret < 0) {
                 loge("\n");
                 return ret;
@@ -1605,7 +1608,7 @@ error:
     return ret;
 }
 
-static int _ parse_add_ds(parse_t *parse, elf_context_t *elf, vector_t *global_vars) {
+static int _parse_add_ds(parse_t *parse, elf_context_t *elf, vector_t *global_vars) {
     variable_t *v;
     string_t *data;
 
@@ -1830,7 +1833,7 @@ int parse_compile_functions(parse_t *parse, vector_t *functions) {
     return 0;
 }
 
-static int _ parse_add_text_relas(parse_t *parse, elf_context_t *elf, vector_t *functions) {
+static int _parse_add_text_relas(parse_t *parse, elf_context_t *elf, vector_t *functions) {
     function_t *f;
     vector_t *relas;
     rela_t *r;
@@ -1857,9 +1860,9 @@ static int _ parse_add_text_relas(parse_t *parse, elf_context_t *elf, vector_t *
             }
 
             if (r->func->node.define_flag)
-                ret = _ parse_add_rela(relas, parse, r, r->func->signature->data, SHNDX_TEXT);
+                ret = _parse_add_rela(relas, parse, r, r->func->signature->data, SHNDX_TEXT);
             else
-                ret = _ parse_add_rela(relas, parse, r, r->func->signature->data, 0);
+                ret = _parse_add_rela(relas, parse, r, r->func->signature->data, 0);
 
             if (ret < 0) {
                 loge("\n");
@@ -1876,7 +1879,7 @@ static int _ parse_add_text_relas(parse_t *parse, elf_context_t *elf, vector_t *
             else
                 name = r->var->signature->data;
 
-            ret = _ parse_add_rela(relas, parse, r, name, 2);
+            ret = _parse_add_rela(relas, parse, r, name, 2);
             if (ret < 0) {
                 loge("\n");
                 goto error;
@@ -1940,7 +1943,7 @@ static int _add_debug_file_names(parse_t *parse) {
         if (OP_BLOCK != b->node.type)
             continue;
 
-        ret = _ parse_add_sym(parse, b->name->data, 0, 0, SHN_ABS, ELF64_ST_INFO(STB_LOCAL, STT_FILE));
+        ret = _parse_add_sym(parse, b->name->data, 0, 0, SHN_ABS, ELF64_ST_INFO(STB_LOCAL, STT_FILE));
         if (ret < 0) {
             loge("\n");
             return ret;
@@ -2068,7 +2071,7 @@ int parse_write_elf(parse_t *parse, vector_t *functions, vector_t *global_vars, 
     if (ret < 0)
         goto error;
 
-    ret = _ parse_add_ds(parse, elf, global_vars);
+    ret = _parse_add_ds(parse, elf, global_vars);
     if (ret < 0)
         goto error;
 
@@ -2082,11 +2085,11 @@ int parse_write_elf(parse_t *parse, vector_t *functions, vector_t *global_vars, 
 
     qsort(parse->symtab->data, parse->symtab->size, sizeof(void *), _sym_cmp);
 
-    ret = _ parse_add_data_relas(parse, elf);
+    ret = _parse_add_data_relas(parse, elf);
     if (ret < 0)
         goto error;
 
-    ret = _ parse_add_text_relas(parse, elf, functions);
+    ret = _parse_add_text_relas(parse, elf, functions);
     if (ret < 0)
         goto error;
 
@@ -2147,7 +2150,7 @@ int64_t parse_fill_code2(parse_t *parse, vector_t *functions, vector_t *global_v
         if (ret < 0)
             return ret;
 
-        ret = _ parse_add_sym(parse, f->signature->data, f->code_bytes, offset, SHNDX_TEXT, ELF64_ST_INFO(STB_GLOBAL, STT_FUNC));
+        ret = _parse_add_sym(parse, f->signature->data, f->code_bytes, offset, SHNDX_TEXT, ELF64_ST_INFO(STB_GLOBAL, STT_FUNC));
         if (ret < 0)
             return ret;
 

@@ -1,5 +1,5 @@
 #include"risc.h"
-#include"elf.h"
+#include"ghr_elf.h"
 #include"basic_block.h"
 #include"3ac.h"
 

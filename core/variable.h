@@ -41,7 +41,7 @@ struct variable_s {
 
     // 内存布局相关的偏移
     int offset;       // 总体偏移
-    int bp_offsets;   // 基址指针偏移
+    int bp_offset;   // 基址指针偏移
     int sp_offset;    // 栈指针偏移
     int ds_offset;    // 数据段偏移
     register_t *rabi; // 寄存器分配信息

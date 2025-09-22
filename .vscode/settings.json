@@ -21,7 +21,6 @@
         "utility": "c",
         "string.h": "c",
         "dwarf_def.h": "c",
-        "elf.h": "c",
         "leb128.h": "c",
         "dwarf.h": "c",
         "elf_link.h": "c",

@@ -6,7 +6,7 @@
 #include "x64_reg.h"
 #include "x64_opcode.h"
 #include "utils_graph.h"
-#include "elf.h"
+#include "ghr_elf.h"
 
 #define X64_INST_ADD_CHECK(vec, inst)        \
     do {                                     \

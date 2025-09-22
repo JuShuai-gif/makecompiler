@@ -1,7 +1,7 @@
 #ifndef VM_H
 #define VM_H
 
-#include"elf.h"
+#include"ghr_elf.h"
 #include<dlfcn.h>
 
 #if 0
