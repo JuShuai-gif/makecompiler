@@ -123,7 +123,7 @@ static _3ac_code_t * _auto_gc_code_memset_array(list_t *dag_list_head, ast_t *as
         _3ac_code_free(c);
         return NULL;
     }
-    c->op = _3ac_find_operator(OP__3ac_MEMSET);
+    c->op = _3ac_find_operator(OP_3AC_MEMSET);
 
     dn = dn_array;
     AUTO_GC_CODE_ADD_DN();
@@ -648,7 +648,7 @@ static _3ac_code_t * _code_alloc_member_address(list_t *dag_list_head, ast_t *as
         _3ac_code_free(c);
         return NULL;
     }
-    c->op = _3ac_find_operator(OP__3ac_ADDRESS_OF_POINTER);
+    c->op = _3ac_find_operator(OP_3AC_ADDRESS_OF_POINTER);
 
     w = lex_word_alloc(dn_base->var->w->file, 0, 0, LEX_WORD_ID);
     if (!w) {
@@ -766,7 +766,7 @@ static _3ac_code_t * _code_alloc_array_member_address(list_t *dag_list_head, ast
         _3ac_code_free(c);
         return NULL;
     }
-    c->op = _3ac_find_operator(OP__3ac_ADDRESS_OF_ARRAY_INDEX);
+    c->op = _3ac_find_operator(OP_3AC_ADDRESS_OF_ARRAY_INDEX);
 
     w = lex_word_alloc(dn_base->var->w->file, 0, 0, LEX_WORD_ID);
     if (!w) {

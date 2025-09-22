@@ -11,7 +11,7 @@ typedef struct
     int num;     // 该维度的大小(静态数组长度，或vla的长度表达式值)
 } dimention_t;
 
-// 表示一个变量
+// 变量信息
 struct variable_s {
     int refs; // 引用计数，用于内存管理
 
@@ -135,22 +135,31 @@ int variable_size(variable_t *v); // 获取变量大小
 
 // 是否是常量
 static inline int variable_const(variable_t *v) {
+    // 如果是函数指针，那么是否 const 取决于 字面量常量标志 const_literal_flag
     if (FUNCTION_PTR == v->type)
         return v->const_literal_flag;
 
+    // 如果是指针类型，或者是数组（nb_dimentions > 0），
+    // 判断条件是：1. const_literal_flag 必须为真（字面量常量）
+    // 2. 并且 不能是 VLA (Variable Length Array)，即数组长度不能是运行时决定的
     if (v->nb_pointers + v->nb_dimentions > 0)
         return v->const_literal_flag && !v->vla_flag;
 
+    // 对于普通变量(标量，比如 int a;) 是否const 取决于：
+    // const_flag 是否置位（声明时是否带 const）
+    // 同时确保不是指针 (nb_pointers==0) 也不是数组 (nb_dimentions==0)
     return v->const_flag && 0 == v->nb_pointers && 0 == v->nb_dimentions;
 }
 
 // 是否是常量整数
 static inline int variable_const_integer(variable_t *v) {
+    // 必须为整型、常量标志、不是指针、不是动态数组
     return type_is_integer(v->type) && v->const_flag && 0 == v->nb_pointers && 0 == v->nb_dimentions;
 }
 
 // 是否是常量字符串
 static inline int variable_const_string(variable_t *v) {
+    // 字符、常量标志、字面量常量、一个指针层级、不是动态维度
     return VAR_CHAR == v->type
            && v->const_flag
            && v->const_literal_flag
@@ -160,31 +169,37 @@ static inline int variable_const_string(variable_t *v) {
 
 // 是否是字符串（char* 或 char[]）
 static inline int variable_string(variable_t *v) {
+    // 类型是char、指针和维度必须有一个为1
     return VAR_CHAR == v->type && 1 == v->nb_pointers + v->nb_dimentions;
 }
 
 // 是否是浮点数（非指针/数组）
 static inline int variable_float(variable_t *v) {
+    // 类型是浮点、指针和维度都为0
     return type_is_float(v->type) && 0 == v->nb_pointers && 0 == v->nb_dimentions;
 }
 
 // 是否是整数类型（包括指针/数组）
 static inline int variable_integer(variable_t *v) {
+    // 类型是整型、指针和维度大于0
     return type_is_integer(v->type) || v->nb_pointers > 0 || v->nb_dimentions > 0;
 }
 
 // 是否是有符号整数（非指针/数组）
 static inline int variable_signed(variable_t *v) {
+    // 类型是否有符号、指针和维度都要为0
     return type_is_signed(v->type) && 0 == v->nb_pointers && 0 == v->nb_dimentions;
 }
 
 // 是否是无符号整数（或指针/数组）
 static inline int variable_unsigned(variable_t *v) {
+    // 类型要是无符号类型、
     return type_is_unsigned(v->type) || v->nb_pointers > 0 || v->nb_dimentions > 0;
 }
 
 // 获取指针层数（包括数组维度）
 static inline int variable_nb_pointers(variable_t *v) {
+    // 指针层数 + 维度数
     return v->nb_pointers + v->nb_dimentions;
 }
 
@@ -200,20 +215,23 @@ static inline int variable_is_struct_pointer(variable_t *v) {
 
 // 是否是数组
 static inline int variable_is_array(variable_t *v) {
+    // 数组只需判定维度是否大于0
     return v->nb_dimentions > 0;
 }
 
 // 是否可能需要 malloc 分配
 static inline int variable_may_malloced(variable_t *v) {
+    // 维度大于零
     if (v->nb_dimentions > 0)
         return 0;
-
+    // 如果是函数类型
     if (FUNCTION_PTR == v->type) {
+        // 如果指针大于 0，就需要
         if (v->nb_pointers > 1)
             return 1;
         return 0;
     }
-
+    // 指针存在，就需要
     return v->nb_pointers > 0;
 }
 

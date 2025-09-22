@@ -30,6 +30,8 @@
         "eda.h": "c",
         "eda_pack.h": "c",
         "pack.h": "c",
-        "ghr_elf.h": "c"
+        "ghr_elf.h": "c",
+        "utils_graph.h": "c",
+        "variable.h": "c"
     }
 }

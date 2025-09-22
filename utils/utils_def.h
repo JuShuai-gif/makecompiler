@@ -1,19 +1,17 @@
 #ifndef UTILS_DEF_H
 #define UTILS_DEF_H
 
-#include <bits/types/struct_timeval.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <stddef.h>
-#include <string.h>
-#include <assert.h>
-#include <errno.h>
-#include <time.h>
-#include <unistd.h>
-#include <limits.h>
-#include <math.h>
+#include <stdint.h>// 定义固定宽度的整数类型
+#include <stdio.h>// 标准输入输出库
+#include <stdlib.h>// 标准库函数集合
+#include <stddef.h>// 定义一些常用宏和类型
+#include <string.h>// 字符串和内存操作函数
+#include <assert.h>// 提供 assert(expr) 宏
+#include <errno.h>// 用于表示系统调用或库函数的错误代码
+#include <time.h>// 时间和日期处理
+#include <unistd.h>// POSIX 标准头文件
+#include <limits.h>// 定义整数的取值范围
+#include <math.h>// 数学函数库
 
 
 #if 1

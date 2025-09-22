@@ -811,14 +811,14 @@ static int _bb_init_array_index( _3ac_code_t* c,  basic_block_t* bb,  list_t* bb
 
 	int type;
 	switch (c->op->type) {
-		case  OP__3ac_ASSIGN_ARRAY_INDEX:
+		case  OP_3AC_ASSIGN_ARRAY_INDEX:
 			assert(4 == c->srcs->size);
 			src      =  c->srcs->data[3];
 			dn_src   =  src->dag_node;
 			type     =   OP_ARRAY_INDEX;
 			break;
 
-		case  OP__3ac_ASSIGN_POINTER:
+		case  OP_3AC_ASSIGN_POINTER:
 			assert(3 == c->srcs->size);
 			src      =  c->srcs->data[2];
 			dn_src   =  src->dag_node;
@@ -909,8 +909,8 @@ int  basic_block_inited_vars( basic_block_t* bb,  list_t* bb_list_head)
 					return ret;
 				}
 			}
-		} else if ( OP__3ac_ASSIGN_ARRAY_INDEX == c->op->type
-				||  OP__3ac_ASSIGN_POINTER     == c->op->type) {
+		} else if ( OP_3AC_ASSIGN_ARRAY_INDEX == c->op->type
+				||  OP_3AC_ASSIGN_POINTER     == c->op->type) {
 
 			ret = _bb_init_array_index(c, bb, bb_list_head);
 			if (ret < 0) {
@@ -919,8 +919,8 @@ int  basic_block_inited_vars( basic_block_t* bb,  list_t* bb_list_head)
 				return ret;
 			}
 
-		} else if ( OP__3ac_INC == c->op->type
-				||  OP__3ac_DEC == c->op->type) {
+		} else if ( OP_3AC_INC == c->op->type
+				||  OP_3AC_DEC == c->op->type) {
 
 			src = c->srcs->data[0];
 			dn  = src->dag_node;
@@ -961,10 +961,10 @@ int  basic_block_inited_vars( basic_block_t* bb,  list_t* bb_list_head)
 				}
 
 				if (di->index >= 0) {
-					if ( OP__3ac_INC == c->op->type)
+					if ( OP_3AC_INC == c->op->type)
 						di->index++;
 
-					else if ( OP__3ac_DEC == c->op->type)
+					else if ( OP_3AC_DEC == c->op->type)
 						di->index--;
 				}
 			}
@@ -1048,7 +1048,7 @@ int  basic_block_active_vars( basic_block_t* bb)
 
 		c  =  list_data(l,  _3ac_code_t, list);
 
-		if ( type_is_jmp(c->op->type) ||  OP__3ac_END == c->op->type)
+		if ( type_is_jmp(c->op->type) ||  OP_3AC_END == c->op->type)
 			continue;
 
 		 _3ac_operand_t* src;
@@ -1063,8 +1063,8 @@ int  basic_block_active_vars( basic_block_t* bb)
 				else
 					dst->dag_node->active = 0;
 #if 1
-				if ( OP__3ac_LOAD != c->op->type
-						&&  OP__3ac_RELOAD != c->op->type)
+				if ( OP_3AC_LOAD != c->op->type
+						&&  OP_3AC_RELOAD != c->op->type)
 #endif
 					dst->dag_node->updated = 1;
 			}
@@ -1084,10 +1084,10 @@ int  basic_block_active_vars( basic_block_t* bb)
 
 				if ( OP_INC == c->op->type
 						||  OP_INC_POST == c->op->type
-						||  OP__3ac_INC  == c->op->type
+						||  OP_3AC_INC  == c->op->type
 						||  OP_DEC      == c->op->type
 						||  OP_DEC_POST == c->op->type
-						||  OP__3ac_DEC  == c->op->type)
+						||  OP_3AC_DEC  == c->op->type)
 					src->dag_node->updated = 1;
 			}
 		}

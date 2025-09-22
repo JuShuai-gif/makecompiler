@@ -487,11 +487,11 @@ void dag_node_free_list(list_t *dag_list_head) {
 }
 
 static int __dn_same_call(dag_node_t *dn, const node_t *node, const node_t *split) {
-    variable_t *v0 = _ operand_get(node);
+    variable_t *v0 = _operand_get(node);
     variable_t *v1 = dn->var;
 
     if (split)
-        v0 = _ operand_get(split);
+        v0 = _operand_get(split);
 
     if (v0 && v0->w && v1 && v1->w) {
         if (v0->type != v1->type) {
@@ -509,7 +509,7 @@ int dag_node_same(dag_node_t *dn, const node_t *node) {
     const node_t *split = NULL;
 
     if (node->split_flag) {
-        if (dn->var != _ operand_get(node))
+        if (dn->var != _operand_get(node))
             return 0;
 
         split = node;
@@ -543,7 +543,7 @@ int dag_node_same(dag_node_t *dn, const node_t *node) {
         || OP_INC_POST == node->type
         || OP_DEC_POST == node->type
         || OP_ADDRESS_OF == node->type) {
-        if (dn->var == _ operand_get((node_t *)node))
+        if (dn->var == _operand_get((node_t *)node))
             return 1;
         return 0;
     }
@@ -556,7 +556,7 @@ int dag_node_same(dag_node_t *dn, const node_t *node) {
 
     if (OP_TYPE_CAST == node->type) {
         dag_node_t *dn0 = dn->childs->data[0];
-        variable_t *vn1 = _ operand_get(node->nodes[1]);
+        variable_t *vn1 = _operand_get(node->nodes[1]);
         node_t *n1 = node->nodes[1];
 
         while (OP_EXPR == n1->type)
@@ -684,7 +684,7 @@ int dag_get_node(list_t *h, const node_t *node, dag_node_t **pp) {
     else
         node2 = node;
 
-    v = _ operand_get((node_t *)node2);
+    v = _operand_get((node_t *)node2);
 
     dn = dag_find_node(h, node2);
 

@@ -680,7 +680,8 @@ int __lex_pop_word(lex_t *lex, lex_word_t **pword) {
 
         free(c);
         c = _lex_pop_char(lex);
-    }
+    }// 到这里，相当于一个单词结束了
+
     // 文件末尾
     if (EOF == c->c) {
         w = lex_word_alloc(lex->file, lex->nb_lines, lex->pos, LEX_WORD_EOF);

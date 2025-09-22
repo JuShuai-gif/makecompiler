@@ -1,31 +1,38 @@
-#include " node.h"
+#include "node.h"
 
-variable_t *_ operand_get(const node_t *node) {
+// 获取操作数
+variable_t *_operand_get(const node_t *node) {
+    // 判断节点类型是否是变量类型
     if (type_is_var(node->type))
         return node->var;
-    else if (type_is_operator(node->type))
+    else if (type_is_operator(node->type))// 是否是操作类型
         return node->result;
 
     return NULL;
 }
 
-function_t *_ function_get(node_t *node) {
+// 获取函数节点
+function_t *_function_get(node_t *node) {
     while (node) {
+        // 先判断节点类型是否是函数
         if (FUNCTION == node->type)
             return (function_t *)node;
-
+        // 返回节点的父节点
         node = node->parent;
     }
     return NULL;
 }
 
+// 节点分配空间
 node_t *node_alloc(lex_word_t *w, int type, variable_t *var) {
+    // 首先分配一个节点空间
     node_t *node = calloc(1, sizeof(node_t));
     if (!node) {
         loge("node alloc failed\n");
         return NULL;
     }
 
+    // 如果类型是一个变量
     if (type_is_var(type)) {
         node->var = variable_ref(var);
         if (!node->var) {
