@@ -1,12 +1,15 @@
 #include "block.h"
 #include "scope.h"
 
+// 分配块
 block_t *block_alloc(lex_word_t *w) {
+    // 分配块
     block_t *b = calloc(1, sizeof(block_t));
 
     if (!b)
         return NULL;
 
+    // 申请范围
     b->scope = scope_alloc(w, "block");
 
     if (!b->scope) {
@@ -14,25 +17,31 @@ block_t *block_alloc(lex_word_t *w) {
         return NULL;
     }
 
+    // 如果词元没有
     if (w) {
+        // 词元克隆
         b->node.w = lex_word_clone(w);
 
+        // 没有分配成功
         if (!b->node.w) {
             scope_free(b->scope);
             free(b);
             return NULL;
         }
     }
+    // 设置类型为 BLOCK
     b->node.type = OP_BLOCK;
     return b;
 }
 
+// 根据字符串分配块
 block_t *block_alloc_cstr(const char *name) {
     block_t *b = calloc(1, sizeof(block_t));
 
     if (!b)
         return NULL;
 
+    // 设置名字
     b->name = string_cstr(name);
 
     if (!b->name) {
@@ -40,6 +49,7 @@ block_t *block_alloc_cstr(const char *name) {
         return NULL;
     }
 
+    // 范围
     b->scope = scope_alloc(NULL, name);
     if (!b->scope) {
         string_free(b->name);
@@ -51,6 +61,7 @@ block_t *block_alloc_cstr(const char *name) {
     return b;
 }
 
+// 释放
 void block_free(block_t *b) {
     if (b) {
         scope_free(b->scope);
@@ -64,6 +75,7 @@ void block_free(block_t *b) {
     }
 }
 
+// 寻找类型
 type_t *block_find_type(block_t *b, const char *name) {
     assert(b);
     while (b) {
@@ -79,6 +91,7 @@ type_t *block_find_type(block_t *b, const char *name) {
     return NULL;
 }
 
+// 
 type_t *block_find_type_type(block_t *b, const int type) {
     assert(b);
 
@@ -95,6 +108,7 @@ type_t *block_find_type_type(block_t *b, const int type) {
     return NULL;
 }
 
+// 寻找变量
 variable_t *block_find_variable(block_t *b, const char *name) {
     assert(b);
     while (b) {
@@ -110,6 +124,7 @@ variable_t *block_find_variable(block_t *b, const char *name) {
     return NULL;
 }
 
+// 寻找函数
 function_t *block_find_function(block_t *b, const char *name) {
     assert(b);
     while (b) {
@@ -125,6 +140,7 @@ function_t *block_find_function(block_t *b, const char *name) {
     return NULL;
 }
 
+// 寻找标签
 label_t *block_find_label(block_t *b, const char *name) {
     assert(b);
     while (b) {

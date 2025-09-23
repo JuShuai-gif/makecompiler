@@ -1,6 +1,7 @@
 #include "scope.h"
 #include "type.h"
 
+// 
 type_t *type_alloc(lex_word_t *w, const char *name, int type, int size) {
     type_t *t = calloc(1, sizeof(type_t));
     if (!t)

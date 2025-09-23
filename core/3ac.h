@@ -7,30 +7,30 @@
 #include "basic_block.h"
 
 // 定义结构体别名
-typedef struct _3ac_operator_s _3ac_operator_t;
-typedef struct _3ac_operand_s _3ac_operand_t;
+typedef struct ghr_3ac_operator_s ghr_3ac_operator_t; // 操作
+typedef struct ghr_3ac_operand_s ghr_3ac_operand_t;// 操作数
 
 // 三地址码的操作符结构体
-struct _3ac_operator_s {
+struct ghr_3ac_operator_s {
     int type;               // 操作符类型（例如加减乘除、赋值、跳转等）
     const char *name;       // 操作符的字符串表示（例如 "+", "-", "jmp"）
 };
 
 // 表示操作数(可能是变量、常量、标签、AST节点等)
-struct _3ac_operand_s {
+struct ghr_3ac_operand_s {
     node_t *node;         // 对应的抽象语法树(AST)节点
     dag_node_t *dag_node; // 对应的 DAG 节点(用于优化和代码生成)
-    _3ac_code_t * code;    // 若为跳转语句，则指向对应的目标三地址码
+    ghr_3ac_code_t * code;    // 若为跳转语句，则指向对应的目标三地址码
     basic_block_t *bb;    // 若为跳转语句，则指向目标基本块
 
     void *rabi;// 额外信息指针(可能和寄存器分配/ABI 有关)
 };
 
 // 三地址码的指令结构体
-struct _3ac_code_s {
+struct ghr_3ac_code_s {
     list_t list; // 作为链表节点，连接在三地址码指令链表中
 
-    _3ac_operator_t * op; // 指令对应的操作符
+    ghr_3ac_operator_t * op; // 指令对应的操作符
 
     vector_t *dsts; // 目标操作数列表（通常只有函数返回值会用到）
     vector_t *srcs; // 源操作数列表（通常有两个源操作数）

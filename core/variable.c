@@ -2,8 +2,10 @@
 #include "type.h"
 #include "function.h"
 
+// member内存分配
 member_t *member_alloc(variable_t *base) {
-    member_t *m = calloc(1, sizeof(member_t));
+    // 
+	member_t *m = calloc(1, sizeof(member_t));
 
     if (!m)
         return NULL;
@@ -12,55 +14,78 @@ member_t *member_alloc(variable_t *base) {
     return m;
 }
 
+// 成员释放
 void member_free(member_t *m) {
     if (m) {
+		// 先释放 indexes
         if (m->indexes) {
+			// 先清除
             vector_clear(m->indexes, (void (*)(void *))free);
-            vector_free(m->indexes);
+            // 再释放
+			vector_free(m->indexes);
         }
+		// 最后释放本体
         free(m);
     }
 }
 
+// 计算成员偏移量
 int member_offset(member_t *m) {
+	// 如果没有索引（比如只是变量本身，不取数组元素），偏移为 0
     if (!m->indexes)
         return 0;
 
+	// 基础变量（比如 arr、a 等）
     variable_t *base = m->base;
+
+	// 当前处理的索引操作
     index_t *idx;
 
+	// 当前正在处理的维度
     int dim = 0;
+	// 最终偏移量（字节数）
     int offset = 0;
     int i;
     int j;
 
+	// 遍历所有索引操作
     for (i = 0; i < m->indexes->size; i++) {
+		// 当前索引
         idx = m->indexes->data[i];
 
+		// 如果 idx->member 不为空，说明这是结构体成员访问
         if (idx->member) {
+			 // 加上结构体成员的偏移量
             offset += idx->member->offset;
+			// 更新 base，进入这个成员作为新的基准
             base = idx->member;
             dim = 0;
             continue;
         }
 
+		// 如果是数组下标访问，要求 index >= 0
         assert(idx->index >= 0);
-
+		// 进入下一维度
         dim++;
-
+		// 计算当前维度之后所有维度的容量
         int capacity = 1;
-
         for (j = dim; j < base->nb_dimentions; j++) {
             capacity *= base->dimentions[j].num;
         }
 
+		// 乘以单个元素的大小，得到这一维度单位步长（字节数）
         capacity *= base->size;
+		// 累加偏移量：下标 × 步长
         offset += capacity * idx->index;
     }
+
+	// 返回最终计算的偏移量
     return offset;
 }
 
+// 成员增加索引
 int member_add_index(member_t *m, variable_t *member, int index) {
+	// 如果
     if (!m)
         return -1;
 
@@ -87,9 +112,10 @@ int member_add_index(member_t *m, variable_t *member, int index) {
     return 0;
 }
 
-
+// 申请一个变量类型，所需词元、类型
 variable_t*	variable_alloc(lex_word_t* w, type_t* t)
 {
+	// 先申请一个变量空间
 	variable_t* v = calloc(1, sizeof(variable_t));
 	if (!v)
 		return NULL;
@@ -101,6 +127,7 @@ variable_t*	variable_alloc(lex_word_t* w, type_t* t)
 	v->nb_pointers = t->nb_pointers;
 	v->func_ptr    = t->func_ptr;
 
+	// 指针层数
 	if (v->nb_pointers > 0)
 		v->size = sizeof(void*);
 	else
@@ -114,12 +141,14 @@ variable_t*	variable_alloc(lex_word_t* w, type_t* t)
 	v->offset = t->offset;
 
 	if (w) {
+		// 克隆一个词元
 		v->w = lex_word_clone(w);
 		if (!v->w) {
 			free(v);
 			return NULL;
 		}
 
+		// 
 		if (lex_is_const(w)) {
 			v->const_flag         = 1;
 			v->const_literal_flag = 1;
@@ -169,9 +198,10 @@ variable_t*	variable_alloc(lex_word_t* w, type_t* t)
 	return v;
 }
 
-
+// 变量克隆
 variable_t*	variable_clone(variable_t* v)
 {
+	// 先申请一个空间
 	variable_t* v2 = calloc(1, sizeof(variable_t));
 	if (!v2)
 		return NULL;
@@ -249,12 +279,14 @@ variable_t*	variable_clone(variable_t* v)
 	return v2;
 }
 
+// 增加一个引用
 variable_t*	variable_ref(variable_t* v)
 {
 	v->refs++;
 	return v;
 }
 
+// 变量释放
 void variable_free(variable_t* v)
 {
 	if (v) {
@@ -331,6 +363,7 @@ void variable_set_array_member(variable_t* array, int index, variable_t* member)
 	memcpy(array->data.p + index * member->size, &(member->data.i), member->size);
 }
 
+// 变量信息打印
 void variable_print(variable_t* v)
 {
 	assert(v);
@@ -349,6 +382,7 @@ void variable_print(variable_t* v)
 		printf("print var: name: %s, type: %d\n", v->w->text->data, v->type);
 }
 
+// 变量类型是否相同
 int variable_same_type(variable_t* v0, variable_t* v1)
 {
 	if (v0) {
@@ -385,6 +419,7 @@ int variable_same_type(variable_t* v0, variable_t* v1)
 	return 1;
 }
 
+// 变量类型是否相似
 int variable_type_like(variable_t* v0, variable_t* v1)
 {
 	if (v0) {
@@ -415,6 +450,7 @@ int variable_type_like(variable_t* v0, variable_t* v1)
 	return 1;
 }
 
+// 有符号扩展
 void variable_sign_extend(variable_t* v, int bytes)
 {
 	if (bytes <= v->size)
@@ -427,6 +463,7 @@ void variable_sign_extend(variable_t* v, int bytes)
 	v->size = bytes;
 }
 
+// 0 扩展
 void variable_zero_extend(variable_t* v, int bytes)
 {
 	if (bytes <= v->size)
@@ -439,6 +476,7 @@ void variable_zero_extend(variable_t* v, int bytes)
 	v->size = bytes;
 }
 
+// 变量扩展
 void variable_extend_bytes(variable_t* v, int bytes)
 {
 	if (type_is_signed(v->type))
@@ -447,6 +485,7 @@ void variable_extend_bytes(variable_t* v, int bytes)
 		variable_zero_extend(v, bytes);
 }
 
+// 
 void variable_extend_std(variable_t* v, variable_t* std)
 {
 	if (type_is_signed(v->type))
@@ -457,6 +496,7 @@ void variable_extend_std(variable_t* v, variable_t* std)
 	v->type = std->type;
 }
 
+// 变量大小
 int variable_size(variable_t* v)
 {
 	if (0 == v->nb_dimentions)

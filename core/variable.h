@@ -86,11 +86,29 @@ struct variable_s {
 // ==========================
 // 数组/结构体访问相关
 // ==========================
+// 表示一次 [索引] 操作
+// 如果是数组: a[3],这里 member 就是变量 a，index = 3
+// 如果是结构体:p.x 也可以抽象为一种索引，member 指向 p,index表示成员 x 在结构体里的位置
+// 它是单步的 [从某个对象中取某个子元素] 的描述
 struct index_s {
     variable_t *member; // 被索引的成员（比如数组元素、结构体成员）
     int index;          // 索引值（数组下标）
 };
 
+// 表示一个 [完整的成员访问链]
+/*
+对于一维数组 a[3]
+    base = a
+    indexes = {(a,3)}
+对于二维数组 a[3][5]
+    base = a
+    indexes = {(a,3),(a[3],5)}
+对于结构体数组 arr[2].point.x
+    base = arr
+    indexes里一次存储(arr,2)、(arr[2],"point")、(arr[2].point,"x")
+
+member_s 就能表示 [从某个基变量出发，通过若干次索引，最终定位到一个具体的元素]
+*/
 struct member_s {
     variable_t *base;  // 基础变量（数组/结构体）
     vector_t *indexes; // 索引列表（可以是多维数组或多层嵌套）
@@ -115,7 +133,7 @@ void variable_free(variable_t *var);                  // 释放变量
 
 void variable_print(variable_t *var); // 打印变量信息
 
-void variable_add_array_dimention(variable_t *array, int index, variable_t *member); // 添加数组维度
+void variable_add_array_dimention(variable_t *array, int index, expr_t *member); // 添加数组维度
 void variable_set_array_member(variable_t *array, int index, variable_t *member);    // 设置数组成员
 void variable_get_array_member(variable_t *array, int index, variable_t *member);    // 获取数组成员
 
