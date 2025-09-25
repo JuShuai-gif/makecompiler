@@ -3,101 +3,101 @@
 #include"basic_block.h"
 #include"utils_graph.h"
 
-static _3ac_operator_t _3ac_operators[] = {
-	{OP_CALL, 			"call"},
+static mc_3ac_operator_t mc_3ac_operators[] = {
+	{OP_CALL, 			"call"},// 函数调用
 
-	{OP_ARRAY_INDEX, 	"array_index"},
-	{OP_POINTER,        "pointer"},
+	{OP_ARRAY_INDEX, 	"array_index"},// 访问 a[i]
+	{OP_POINTER,        "pointer"},// 指针操作 p->field
 
-	{OP_TYPE_CAST, 	    "cast"},
+	{OP_TYPE_CAST, 	    "cast"},// 
 
 	{OP_LOGIC_NOT, 		"logic_not"},
 	{OP_BIT_NOT,        "not"},
 	{OP_NEG, 			"neg"},
 	{OP_POSITIVE, 		"positive"},
 
-	{OP_INC,            "inc"},
-	{OP_DEC,            "dec"},
+	{OP_INC,            "inc"},// 前置 自增 ++x
+	{OP_DEC,            "dec"},// 前置 自减 --x
 
-	{OP_INC_POST,       "inc_post"},
-	{OP_DEC_POST,       "dec_post"},
+	{OP_INC_POST,       "inc_post"},// 后置自增 x++
+	{OP_DEC_POST,       "dec_post"},// 后置自减 x--
 
-	{OP_DEREFERENCE,	"dereference"},
-	{OP_ADDRESS_OF, 	"address_of"},
+	{OP_DEREFERENCE,	"dereference"},// 解引用 *p
+	{OP_ADDRESS_OF, 	"address_of"},// 取地址(&x)
 
-	{OP_MUL, 			"mul"},
-	{OP_DIV, 			"div"},
-	{OP_MOD,            "mod"},
+	{OP_MUL, 			"mul"},// 乘法 a * b
+	{OP_DIV, 			"div"},// 除法 a / b
+	{OP_MOD,            "mod"},// 取余 a % b
 
-	{OP_ADD, 			"add"},
-	{OP_SUB, 			"sub"},
+	{OP_ADD, 			"add"},// 加法
+	{OP_SUB, 			"sub"},// 减法
 
-	{OP_SHL,            "shl"},
-	{OP_SHR,            "shr"},
+	{OP_SHL,            "shl"},// 左移 a << b
+	{OP_SHR,            "shr"},// 右移 a >> b
 
-	{OP_BIT_AND,        "and"},
-	{OP_BIT_OR,         "or"},
+	{OP_BIT_AND,        "and"},// 按位与 (a & b)
+	{OP_BIT_OR,         "or"},// 按位或 (a | b)
 
-	{OP_EQ, 			"eq"},
-	{OP_NE,             "neq"},
-	{OP_GT, 			"gt"},
-	{OP_LT, 			"lt"},
-	{OP_GE, 			"ge"},
-	{OP_LE, 			"le"},
+	{OP_EQ, 			"eq"},// 相等(==)
+	{OP_NE,             "neq"},// 不等(!=)
+	{OP_GT, 			"gt"},// 大于(>)
+	{OP_LT, 			"lt"},// 小于(<)
+	{OP_GE, 			"ge"},// 大于等于(>=)
+	{OP_LE, 			"le"},// 小于等于(<=)
 
-	{OP_ASSIGN,         "assign"},
-	{OP_ADD_ASSIGN,     "+="},
-	{OP_SUB_ASSIGN,     "-="},
-	{OP_MUL_ASSIGN,     "*="},
-	{OP_DIV_ASSIGN,     "/="},
-	{OP_MOD_ASSIGN,     "%="},
-	{OP_SHL_ASSIGN,     "<<="},
-	{OP_SHR_ASSIGN,     ">>="},
-	{OP_AND_ASSIGN,     "&="},
-	{OP_OR_ASSIGN,      "|="},
+	{OP_ASSIGN,         "assign"},// x = y
+	{OP_ADD_ASSIGN,     "+="},// x+=y
+	{OP_SUB_ASSIGN,     "-="},// x-=y
+	{OP_MUL_ASSIGN,     "*="},// x*=y
+	{OP_DIV_ASSIGN,     "/="},// x/=y
+	{OP_MOD_ASSIGN,     "%="},// x%=y
+	{OP_SHL_ASSIGN,     "<<="},// x <<= y
+	{OP_SHR_ASSIGN,     ">>="},// x >>= y
+	{OP_AND_ASSIGN,     "&="},// x &= y
+	{OP_OR_ASSIGN,      "|="},// x |= y
 
-	{OP_VA_START,       "va_start"},
+	{OP_VA_START,       "va_start"},// 宏 IR
 	{OP_VA_ARG,         "va_arg"},
 	{OP_VA_END,         "va_end"},
 
-	{OP_VLA_ALLOC,      "vla_alloc"},
-	{OP_VLA_FREE,       "vla_free"},
+	{OP_VLA_ALLOC,      "vla_alloc"},// 分配变长数组
+	{OP_VLA_FREE,       "vla_free"},// 释放变长数组
 
-	{OP_RETURN,			 "return"},
-	{OP_GOTO,			 "jmp"},
+	{OP_RETURN,			 "return"},// 从函数返回
+	{OP_GOTO,			 "jmp"},// 无条件跳转
 
-	{OP_3AC_TEQ,         "teq"},
-	{OP_3AC_CMP,         "cmp"},
+	{OP_3AC_TEQ,         "teq"},// 测试相等(test eq)
+	{OP_3AC_CMP,         "cmp"},// 比较(cmp)
 
-	{OP_3AC_LEA,         "lea"},
+	{OP_3AC_LEA,         "lea"},// 取地址(Load Effective Address, 类似汇编 lea)
 
-	{OP_3AC_SETZ,        "setz"},
-	{OP_3AC_SETNZ,       "setnz"},
-	{OP_3AC_SETGT,       "setgt"},
-	{OP_3AC_SETGE,       "setge"},
+	{OP_3AC_SETZ,        "setz"},// 等于则置位
+	{OP_3AC_SETNZ,       "setnz"},// 不等则置位
+	{OP_3AC_SETGT,       "setgt"},// 大于置位
+	{OP_3AC_SETGE,       "setge"},// 
 	{OP_3AC_SETLT,       "setlt"},
-	{OP_3AC_SETLE,       "setle"},
+	{OP_3AC_SETLE,       "setle"},// 小于置位
 
 	{OP_3AC_SETA,        "seta"},
 	{OP_3AC_SETAE,       "setae"},
 	{OP_3AC_SETB,        "setb"},
 	{OP_3AC_SETBE,       "setbe"},
 
-	{OP_3AC_JZ,          "jz"},
-	{OP_3AC_JNZ,         "jnz"},
-	{OP_3AC_JGT,         "jgt"},
-	{OP_3AC_JGE,         "jge"},
-	{OP_3AC_JLT,         "jlt"},
-	{OP_3AC_JLE,         "jle"},
+	{OP_3AC_JZ,          "jz"},  // 如果等于零跳转
+	{OP_3AC_JNZ,         "jnz"},// 如果不等于零跳转
+	{OP_3AC_JGT,         "jgt"},// 如果大于跳转
+	{OP_3AC_JGE,         "jge"},// 如果大于等于跳转
+	{OP_3AC_JLT,         "jlt"},// 如果小于跳转
+	{OP_3AC_JLE,         "jle"},// 如果小于等于跳转
 
-	{OP_3AC_JA,          "ja"},
-	{OP_3AC_JAE,         "jae"},
-	{OP_3AC_JB,          "jb"},
-	{OP_3AC_JBE,         "jbe"},
+	{OP_3AC_JA,          "ja"},// 无符号大于跳转
+	{OP_3AC_JAE,         "jae"},// 无符号大于等于跳转
+	{OP_3AC_JB,          "jb"},// 无符号小于跳转
+	{OP_3AC_JBE,         "jbe"},// 无符号小于等于跳转
 
-	{OP_3AC_DUMP,        "core_dump"},
-	{OP_3AC_NOP,         "nop"},
-	{OP_3AC_END,         "end"},
+	{OP_3AC_DUMP,        "core_dump"},// 打印 IR 栈或核心数据
+	{OP_3AC_NOP,         "nop"},// 空操作 (No Operation)
+	{OP_3AC_END,         "end"},// 程序结束
 
 	{OP_3AC_PUSH,        "push"},
 	{OP_3AC_POP,         "pop"},
@@ -111,36 +111,36 @@ static _3ac_operator_t _3ac_operators[] = {
 	{OP_3AC_MEMSET,      "memset"},
 
 	{OP_3AC_INC,         "inc3"},
-	{OP_3AC_DEC,         "dec3"},
+	{OP_3AC_DEC,         "dec3"},// 
 
-	{OP_3AC_ASSIGN_DEREFERENCE,	    "dereference="},
-	{OP_3AC_ASSIGN_ARRAY_INDEX,	    "array_index="},
-	{OP_3AC_ASSIGN_POINTER,	        "pointer="},
+	{OP_3AC_ASSIGN_DEREFERENCE,	    "dereference="},// *p=x
+	{OP_3AC_ASSIGN_ARRAY_INDEX,	    "array_index="},// a[i]=x
+	{OP_3AC_ASSIGN_POINTER,	        "pointer="},// p->field = x
 
-	{OP_3AC_ADDRESS_OF_ARRAY_INDEX, "&array_index"},
-	{OP_3AC_ADDRESS_OF_POINTER,     "&pointer"},
+	{OP_3AC_ADDRESS_OF_ARRAY_INDEX, "&array_index"},// &a[i]
+	{OP_3AC_ADDRESS_OF_POINTER,     "&pointer"},// &p->field
 };
 
-_3ac_operator_t*	_3ac_find_operator(const int type)
+mc_3ac_operator_t*	mc_3ac_find_operator(const int type)
 {
 	int i;
-	for (i = 0; i < sizeof(_3ac_operators) / sizeof(_3ac_operators[0]); i++) {
-		if (type == _3ac_operators[i].type) {
-			return &(_3ac_operators[i]);
+	for (i = 0; i < sizeof(mc_3ac_operators) / sizeof(mc_3ac_operators[0]); i++) {
+		if (type == mc_3ac_operators[i].type) {
+			return &(mc_3ac_operators[i]);
 		}
 	}
 
 	return NULL;
 }
 
-_3ac_operand_t* _3ac_operand_alloc()
+mc_3ac_operand_t* mc_3ac_operand_alloc()
 {
-	_3ac_operand_t* operand = calloc(1, sizeof(_3ac_operand_t));
+	mc_3ac_operand_t* operand = calloc(1, sizeof(mc_3ac_operand_t));
 	assert(operand);
 	return operand;
 }
 
-void _3ac_operand_free(_3ac_operand_t* operand)
+void mc_3ac_operand_free(mc_3ac_operand_t* operand)
 {
 	if (operand) {
 		free(operand);
@@ -148,14 +148,14 @@ void _3ac_operand_free(_3ac_operand_t* operand)
 	}
 }
 
-_3ac_code_t* _3ac_code_alloc()
+mc_3ac_code_t* mc_3ac_code_alloc()
 {
-	_3ac_code_t* c = calloc(1, sizeof(_3ac_code_t));
+	mc_3ac_code_t* c = calloc(1, sizeof(mc_3ac_code_t));
 
 	return c;
 }
 
-int _3ac_code_same(_3ac_code_t* c0, _3ac_code_t* c1)
+int mc_3ac_code_same(mc_3ac_code_t* c0, mc_3ac_code_t* c1)
 {
 	if (c0->op != c1->op)
 		return 0;
@@ -169,8 +169,8 @@ int _3ac_code_same(_3ac_code_t* c0, _3ac_code_t* c1)
 
 		int i;
 		for (i = 0; i < c0->dsts->size; i++) {
-			_3ac_operand_t* dst0 = c0->dsts->data[i];
-			_3ac_operand_t* dst1 = c1->dsts->data[i];
+			mc_3ac_operand_t* dst0 = c0->dsts->data[i];
+			mc_3ac_operand_t* dst1 = c1->dsts->data[i];
 
 			if (dst0->dag_node) {
 				if (!dst1->dag_node)
@@ -193,8 +193,8 @@ int _3ac_code_same(_3ac_code_t* c0, _3ac_code_t* c1)
 
 		int i;
 		for (i = 0; i < c0->srcs->size; i++) {
-			_3ac_operand_t* src0 = c0->srcs->data[i];
-			_3ac_operand_t* src1 = c1->srcs->data[i];
+			mc_3ac_operand_t* src0 = c0->srcs->data[i];
+			mc_3ac_operand_t* src1 = c1->srcs->data[i];
 
 			if (src0->dag_node) {
 				if (!src1->dag_node)
@@ -210,9 +210,9 @@ int _3ac_code_same(_3ac_code_t* c0, _3ac_code_t* c1)
 	return 1;
 }
 
-_3ac_code_t* _3ac_code_clone(_3ac_code_t* c)
+mc_3ac_code_t* _3ac_code_clone(mc_3ac_code_t* c)
 {
-	_3ac_code_t* c2 = calloc(1, sizeof(_3ac_code_t));
+	mc_3ac_code_t* c2 = calloc(1, sizeof(mc_3ac_code_t));
 	if (!c2)
 		return NULL;
 
@@ -227,8 +227,8 @@ _3ac_code_t* _3ac_code_clone(_3ac_code_t* c)
 
 		int i;
 		for (i = 0; i < c->dsts->size; i++) {
-			_3ac_operand_t* dst  = c->dsts->data[i];
-			_3ac_operand_t* dst2 = _3ac_operand_alloc();
+			mc_3ac_operand_t* dst  = c->dsts->data[i];
+			mc_3ac_operand_t* dst2 = _3ac_operand_alloc();
 
 			if (!dst2) {
 				_3ac_code_free(c2);
@@ -256,8 +256,8 @@ _3ac_code_t* _3ac_code_clone(_3ac_code_t* c)
 
 		int i;
 		for (i = 0; i < c->srcs->size; i++) {
-			_3ac_operand_t* src  = c->srcs->data[i];
-			_3ac_operand_t* src2 = _3ac_operand_alloc();
+			mc_3ac_operand_t* src  = c->srcs->data[i];
+			mc_3ac_operand_t* src2 = _3ac_operand_alloc();
 
 			if (!src2) {
 				_3ac_code_free(c2);
@@ -281,20 +281,20 @@ _3ac_code_t* _3ac_code_clone(_3ac_code_t* c)
 	return c2;
 }
 
-void _3ac_code_free(_3ac_code_t* c)
+void mc_3ac_code_free(mc_3ac_code_t* c)
 {
 	int i;
 
 	if (c) {
 		if (c->dsts) {
 			for (i = 0; i < c->dsts->size; i++)
-				_3ac_operand_free(c->dsts->data[i]);
+				mc_3ac_operand_free(c->dsts->data[i]);
 			vector_free(c->dsts);
 		}
 
 		if (c->srcs) {
 			for (i = 0; i < c->srcs->size; i++)
-				_3ac_operand_free(c->srcs->data[i]);
+				mc_3ac_operand_free(c->srcs->data[i]);
 			vector_free(c->srcs);
 		}
 
@@ -310,15 +310,15 @@ void _3ac_code_free(_3ac_code_t* c)
 	}
 }
 
-_3ac_code_t* _3ac_alloc_by_src(int op_type, dag_node_t* src)
+mc_3ac_code_t* mc_3ac_alloc_by_src(int op_type, dag_node_t* src)
 {
-	_3ac_operator_t* _3ac_op = _3ac_find_operator(op_type);
-	if (!_3ac_op) {
+	mc_3ac_operator_t* mc_3ac_op = mc_3ac_find_operator(op_type);
+	if (!mc_3ac_op) {
 		loge("3ac operator not found\n");
 		return NULL;
 	}
 
-	_3ac_operand_t* src0	= _3ac_operand_alloc();
+	mc_3ac_operand_t* src0	= mc_3ac_operand_alloc();
 	if (!src0)
 		return NULL;
 	src0->dag_node = src;
@@ -329,54 +329,54 @@ _3ac_code_t* _3ac_alloc_by_src(int op_type, dag_node_t* src)
 	if (vector_add(srcs, src0) < 0)
 		goto error0;
 
-	_3ac_code_t* c = _3ac_code_alloc();
+	mc_3ac_code_t* c = mc_3ac_code_alloc();
 	if (!c)
 		goto error0;
 
-	c->op	= _3ac_op;
+	c->op	= mc_3ac_op;
 	c->srcs	= srcs;
 	return c;
 
 error0:
 	vector_free(srcs);
 error1:
-	_3ac_operand_free(src0);
+	mc_3ac_operand_free(src0);
 	return NULL;
 }
 
-_3ac_code_t* _3ac_alloc_by_dst(int op_type, dag_node_t* dst)
+mc_3ac_code_t* mc_3ac_alloc_by_dst(int op_type, dag_node_t* dst)
 {
-	_3ac_operator_t* op;
-	_3ac_operand_t*  d;
-	_3ac_code_t*     c;
+	mc_3ac_operator_t* op;
+	mc_3ac_operand_t*  d;
+	mc_3ac_code_t*     c;
 
-	op = _3ac_find_operator(op_type);
+	op = mc_3ac_find_operator(op_type);
 	if (!op) {
 		loge("3ac operator not found\n");
 		return NULL;
 	}
 
-	d = _3ac_operand_alloc();
+	d = mc_3ac_operand_alloc();
 	if (!d)
 		return NULL;
 	d->dag_node = dst;
 
-	c = _3ac_code_alloc();
+	c = mc_3ac_code_alloc();
 	if (!c) {
-		_3ac_operand_free(d);
+		mc_3ac_operand_free(d);
 		return NULL;
 	}
 
 	c->dsts = vector_alloc();
 	if (!c->dsts) {
-		_3ac_operand_free(d);
-		_3ac_code_free(c);
+		mc_3ac_operand_free(d);
+		mc_3ac_code_free(c);
 		return NULL;
 	}
 
 	if (vector_add(c->dsts, d) < 0) {
-		_3ac_operand_free(d);
-		_3ac_code_free(c);
+		mc_3ac_operand_free(d);
+		mc_3ac_code_free(c);
 		return NULL;
 	}
 
@@ -384,40 +384,40 @@ _3ac_code_t* _3ac_alloc_by_dst(int op_type, dag_node_t* dst)
 	return c;
 }
 
-_3ac_code_t* _3ac_jmp_code(int type, label_t* l, node_t* err)
+mc_3ac_code_t* mc_3ac_jmp_code(int type, label_t* l, node_t* err)
 {
-	_3ac_operand_t* dst;
-	_3ac_code_t*    c;
+	mc_3ac_operand_t* dst;
+	mc_3ac_code_t*    c;
 
-	c = _3ac_code_alloc();
+	c = mc_3ac_code_alloc();
 	if (!c)
 		return NULL;
 
-	c->op    = _3ac_find_operator(type);
+	c->op    = mc_3ac_find_operator(type);
 	c->label = l;
 
 	c->dsts  = vector_alloc();
 	if (!c->dsts) {
-		_3ac_code_free(c);
+		mc_3ac_code_free(c);
 		return NULL;
 	}
 
-	dst = _3ac_operand_alloc();
+	dst = mc_3ac_operand_alloc();
 	if (!dst) {
-		_3ac_code_free(c);
+		mc_3ac_code_free(c);
 		return NULL;
 	}
 
 	if (vector_add(c->dsts, dst) < 0) {
-		_3ac_operand_free(dst);
-		_3ac_code_free(c);
+		mc_3ac_operand_free(dst);
+		mc_3ac_code_free(c);
 		return NULL;
 	}
 
 	return c;
 }
 
-static void _3ac_print_node(node_t* node)
+static void mc_3ac_print_node(node_t* node)
 {
 	if (type_is_var(node->type)) {
 		if (node->var->w) {
@@ -444,7 +444,7 @@ static void _3ac_print_node(node_t* node)
 	}
 }
 
-static void _3ac_print_dag_node(dag_node_t* dn)
+static void mc_3ac_print_dag_node(dag_node_t* dn)
 {
 	if (type_is_var(dn->type)) {
 		if (dn->var->w) {
@@ -455,7 +455,7 @@ static void _3ac_print_dag_node(dag_node_t* dn)
 			printf("v_%#lx", 0xffff & (uintptr_t)dn->var);
 		}
 	} else if (type_is_operator(dn->type)) {
-		_3ac_operator_t* op = _3ac_find_operator(dn->type);
+		mc_3ac_operator_t* op = mc_3ac_find_operator(dn->type);
 		if (dn->var && dn->var->w)
 			printf("v_%d_%d/%s_%#lx ",
 					dn->var->w->line, dn->var->w->pos, dn->var->w->text->data,
@@ -468,10 +468,10 @@ static void _3ac_print_dag_node(dag_node_t* dn)
 	}
 }
 
-void _3ac_code_print(_3ac_code_t* c, list_t* sentinel)
+void mc_3ac_code_print(mc_3ac_code_t* c, list_t* sentinel)
 {
-	_3ac_operand_t* src;
-	_3ac_operand_t* dst;
+	mc_3ac_operand_t* src;
+	mc_3ac_operand_t* dst;
 
 	int i;
 
@@ -483,15 +483,15 @@ void _3ac_code_print(_3ac_code_t* c, list_t* sentinel)
 			dst =        c->dsts->data[i];
 
 			if (dst->dag_node)
-				_3ac_print_dag_node(dst->dag_node);
+				mc_3ac_print_dag_node(dst->dag_node);
 
 			else if (dst->node)
-				_3ac_print_node(dst->node);
+				mc_3ac_print_node(dst->node);
 
 			else if (dst->code) {
 				if (&dst->code->list != sentinel) {
 					printf(": ");
-					_3ac_code_print(dst->code, sentinel);
+					mc_3ac_code_print(dst->code, sentinel);
 				}
 			} else if (dst->bb)
 				printf(" bb: %p, index: %d ", dst->bb, dst->bb->index);
@@ -510,10 +510,10 @@ void _3ac_code_print(_3ac_code_t* c, list_t* sentinel)
 				printf("; ");
 
 			if (src->dag_node)
-				_3ac_print_dag_node(src->dag_node);
+				mc_3ac_print_dag_node(src->dag_node);
 
 			else if (src->node)
-				_3ac_print_node(src->node);
+				mc_3ac_print_node(src->node);
 
 			else if (src->code)
 				assert(0);
@@ -526,10 +526,10 @@ void _3ac_code_print(_3ac_code_t* c, list_t* sentinel)
 	printf("\n");
 }
 
-static int _3ac_code_to_dag(_3ac_code_t* c, list_t* dag, int nb_operands0, int nb_operands1)
+static int mc_3ac_code_to_dag(mc_3ac_code_t* c, list_t* dag, int nb_operands0, int nb_operands1)
 {
-	_3ac_operand_t* dst;
-	_3ac_operand_t* src;
+	mc_3ac_operand_t* dst;
+	mc_3ac_operand_t* src;
 	dag_node_t*    dn;
 
 	int ret;
@@ -591,7 +591,7 @@ static int _3ac_code_to_dag(_3ac_code_t* c, list_t* dag, int nb_operands0, int n
 			if (k == dn->childs->size) {
 				loge("i: %d, c->op: %s, dn->childs->size: %d, c->srcs->size: %d\n",
 						i, c->op->name, dn->childs->size, c->srcs->size);
-				_3ac_code_print(c, NULL);
+				mc_3ac_code_print(c, NULL);
 				return -1;
 			}
 		}
@@ -600,10 +600,10 @@ static int _3ac_code_to_dag(_3ac_code_t* c, list_t* dag, int nb_operands0, int n
 	return 0;
 }
 
-int _3ac_code_to_dag(_3ac_code_t* c, list_t* dag)
+int mc_3ac_code_to_dag(mc_3ac_code_t* c, list_t* dag)
 {
-	_3ac_operand_t* src;
-	_3ac_operand_t* dst;
+	mc_3ac_operand_t* src;
+	mc_3ac_operand_t* dst;
 
 	int ret = 0;
 	int i;
@@ -854,22 +854,22 @@ int _3ac_code_to_dag(_3ac_code_t* c, list_t* dag)
 			};
 		}
 
-		return _3ac_code_to_dag(c, dag, n_operands0, n_operands1);
+		return mc_3ac_code_to_dag(c, dag, n_operands0, n_operands1);
 	}
 
 	return 0;
 }
 
-static void _3ac_filter_jmp(list_t* h, _3ac_code_t* c)
+static void mc_3ac_filter_jmp(list_t* h, mc_3ac_code_t* c)
 {
 	list_t*        l2   = NULL;
-	_3ac_code_t*    c2   = NULL;
-	_3ac_operand_t* dst0 = c->dsts->data[0];
-	_3ac_operand_t* dst1 = NULL;
+	mc_3ac_code_t*    c2   = NULL;
+	mc_3ac_operand_t* dst0 = c->dsts->data[0];
+	mc_3ac_operand_t* dst1 = NULL;
 
 	for (l2 = &dst0->code->list; l2 != list_sentinel(h); ) {
 
-		c2 = list_data(l2, _3ac_code_t, list);
+		c2 = list_data(l2, mc_3ac_code_t, list);
 
 		if (OP_GOTO == c2->op->type) {
 			dst0 = c2->dsts->data[0];
@@ -914,28 +914,28 @@ static void _3ac_filter_jmp(list_t* h, _3ac_code_t* c)
 
 	l2	= list_next(&c->list);
 	if (l2 != list_sentinel(h)) {
-		c2 = list_data(l2, _3ac_code_t, list);
+		c2 = list_data(l2, mc_3ac_code_t, list);
 		c2->basic_block_start = 1;
 	}
 	c->basic_block_start = 1;
 }
 
-static int _3ac_filter_dst_teq(list_t* h, _3ac_code_t* c)
+static int mc_3ac_filter_dst_teq(list_t* h, mc_3ac_code_t* c)
 {
-	_3ac_code_t*	   setcc2 = NULL;
-	_3ac_code_t*	   setcc3 = NULL;
-	_3ac_code_t*	   setcc  = NULL;
-	_3ac_code_t*	   jcc    = NULL;
-	_3ac_operand_t* dst0   = c->dsts->data[0];
-	_3ac_operand_t* dst1   = NULL;
-	_3ac_code_t*    teq    = dst0->code;
+	mc_3ac_code_t*	   setcc2 = NULL;
+	mc_3ac_code_t*	   setcc3 = NULL;
+	mc_3ac_code_t*	   setcc  = NULL;
+	mc_3ac_code_t*	   jcc    = NULL;
+	mc_3ac_operand_t* dst0   = c->dsts->data[0];
+	mc_3ac_operand_t* dst1   = NULL;
+	mc_3ac_code_t*    teq    = dst0->code;
 	list_t*        l;
 
 	int jmp_op;
 
 	if (list_prev(&c->list) == list_sentinel(h))
 		return 0;
-	setcc = list_data(list_prev(&c->list),   _3ac_code_t, list);
+	setcc = list_data(list_prev(&c->list),   mc_3ac_code_t, list);
 
 	if ((OP_3AC_JNZ == c->op->type && OP_3AC_SETZ == setcc->op->type)
 			|| (OP_3AC_JZ  == c->op->type && OP_3AC_SETNZ == setcc->op->type)
@@ -962,8 +962,8 @@ static int _3ac_filter_dst_teq(list_t* h, _3ac_code_t* c)
 		assert(setcc->dsts && 1 == setcc->dsts->size);
 		assert(teq->srcs   && 1 == teq  ->srcs->size);
 
-		_3ac_operand_t* src   = teq  ->srcs->data[0];
-		_3ac_operand_t* dst   = setcc->dsts->data[0];
+		mc_3ac_operand_t* src   = teq  ->srcs->data[0];
+		mc_3ac_operand_t* dst   = setcc->dsts->data[0];
 		variable_t*    v_teq = _operand_get(src->node);
 		variable_t*    v_set = _operand_get(dst->node);
 
@@ -971,7 +971,7 @@ static int _3ac_filter_dst_teq(list_t* h, _3ac_code_t* c)
 			return 0;
 
 		for (l  = list_next(&teq->list); l != list_sentinel(h); l = list_next(l)) {
-			jcc = list_data(l, _3ac_code_t, list);
+			jcc = list_data(l, mc_3ac_code_t, list);
 
 			if (type_is_jmp(jcc->op->type))
 				break;
@@ -995,7 +995,7 @@ static int _3ac_filter_dst_teq(list_t* h, _3ac_code_t* c)
 					return 0;
 
 				dst0       = c->dsts->data[0];
-				dst0->code = list_data(l, _3ac_code_t, list);
+				dst0->code = list_data(l, mc_3ac_code_t, list);
 			} else
 				return 0;
 
@@ -1015,7 +1015,7 @@ static int _3ac_filter_dst_teq(list_t* h, _3ac_code_t* c)
 					return 0;
 
 				dst0       = c->dsts->data[0];
-				dst0->code = list_data(l, _3ac_code_t, list);
+				dst0->code = list_data(l, mc_3ac_code_t, list);
 			} else
 				return 0;
 		}
@@ -1023,11 +1023,11 @@ static int _3ac_filter_dst_teq(list_t* h, _3ac_code_t* c)
 
 		if (list_prev(&jcc->list) == list_sentinel(h))
 			return 0;
-		setcc = list_data(list_prev(&jcc->list), _3ac_code_t, list);
+		setcc = list_data(list_prev(&jcc->list), mc_3ac_code_t, list);
 
 		if (type_is_setcc(setcc->op->type)) {
 
-			setcc3 = _3ac_code_clone(setcc);
+			setcc3 = mc_3ac_code_clone(setcc);
 			if (!setcc3)
 				return -ENOMEM;
 			setcc3->op = setcc2->op;
@@ -1051,13 +1051,13 @@ static int _3ac_filter_dst_teq(list_t* h, _3ac_code_t* c)
 	return 0;
 }
 
-static int _3ac_filter_prev_teq(list_t* h, _3ac_code_t* c, _3ac_code_t* teq)
+static int mc_3ac_filter_prev_teq(list_t* h, mc_3ac_code_t* c, mc_3ac_code_t* teq)
 {
-	_3ac_code_t*	setcc3 = NULL;
-	_3ac_code_t*	setcc2 = NULL;
-	_3ac_code_t*	setcc  = NULL;
-	_3ac_code_t*	jcc    = NULL;
-	_3ac_code_t*	jmp    = NULL;
+	mc_3ac_code_t*	setcc3 = NULL;
+	mc_3ac_code_t*	setcc2 = NULL;
+	mc_3ac_code_t*	setcc  = NULL;
+	mc_3ac_code_t*	jcc    = NULL;
+	mc_3ac_code_t*	jmp    = NULL;
 	list_t*     l;
 
 	int jcc_type;
@@ -1065,7 +1065,7 @@ static int _3ac_filter_prev_teq(list_t* h, _3ac_code_t* c, _3ac_code_t* teq)
 	if (list_prev(&teq->list) == list_sentinel(h))
 		return 0;
 
-	setcc    = list_data(list_prev(&teq->list), _3ac_code_t, list);
+	setcc    = list_data(list_prev(&teq->list), mc_3ac_code_t, list);
 	jcc_type = -1;
 
 	if (OP_3AC_JZ == c->op->type) {
@@ -1162,43 +1162,43 @@ static int _3ac_filter_prev_teq(list_t* h, _3ac_code_t* c, _3ac_code_t* teq)
 	assert(setcc->dsts && 1 == setcc->dsts->size);
 	assert(teq->srcs   && 1 == teq  ->srcs->size);
 
-	_3ac_operand_t* src   = teq  ->srcs->data[0];
-	_3ac_operand_t* dst0  = setcc->dsts->data[0];
-	_3ac_operand_t* dst1  = NULL;
+	mc_3ac_operand_t* src   = teq  ->srcs->data[0];
+	mc_3ac_operand_t* dst0  = setcc->dsts->data[0];
+	mc_3ac_operand_t* dst1  = NULL;
 	variable_t*    v_teq = _operand_get(src ->node);
 	variable_t*    v_set = _operand_get(dst0->node);
 
 	if (v_teq != v_set)
 		return 0;
 
-#define _3AC_JCC_ALLOC(j, cc) \
+#define MC_3AC_JCC_ALLOC(j, cc) \
 	do { \
-		j = _3ac_code_alloc(); \
+		j = mc_3ac_code_alloc(); \
 		if (!j) \
 			return -ENOMEM; \
 		\
 		j->dsts = vector_alloc(); \
 		if (!j->dsts) { \
-			_3ac_code_free(j); \
+			mc_3ac_code_free(j); \
 			return -ENOMEM; \
 		} \
 		\
-		_3ac_operand_t* dst0 = _3ac_operand_alloc(); \
+		mc_3ac_operand_t* dst0 = mc_3ac_operand_alloc(); \
 		if (!dst0) { \
-			_3ac_code_free(j); \
+			mc_3ac_code_free(j); \
 			return -ENOMEM; \
 		} \
 		\
 		if (vector_add(j->dsts, dst0) < 0) { \
-			_3ac_code_free(j); \
-			_3ac_operand_free(dst0); \
+			mc_3ac_code_free(j); \
+			mc_3ac_operand_free(dst0); \
 			return -ENOMEM; \
 		} \
-		j->op = _3ac_find_operator(cc); \
+		j->op = mc_3ac_find_operator(cc); \
 		assert(j->op); \
 	} while (0)
 
-	_3ac_JCC_ALLOC(jcc, jcc_type);
+	mc_3ac_JCC_ALLOC(jcc, jcc_type);
 	dst0 = jcc->dsts->data[0];
 	dst1 = c  ->dsts->data[0];
 	dst0->code = dst1->code;
@@ -1207,11 +1207,11 @@ static int _3ac_filter_prev_teq(list_t* h, _3ac_code_t* c, _3ac_code_t* teq)
 	l = list_prev(&c->list);
 	if (l != list_sentinel(h)) {
 
-		setcc2 = list_data(l, _3ac_code_t, list);
+		setcc2 = list_data(l, mc_3ac_code_t, list);
 
 		if (type_is_setcc(setcc2->op->type)) {
 
-			setcc3 = _3ac_code_clone(setcc2);
+			setcc3 = mc_3ac_code_clone(setcc2);
 			if (!setcc3)
 				return -ENOMEM;
 			setcc3->op = setcc->op;
@@ -1222,45 +1222,45 @@ static int _3ac_filter_prev_teq(list_t* h, _3ac_code_t* c, _3ac_code_t* teq)
 
 	l = list_next(&c->list);
 	if (l == list_sentinel(h)) {
-		_3ac_filter_jmp(h, jcc);
+		mc_3ac_filter_jmp(h, jcc);
 		return 0;
 	}
 
-	_3AC_JCC_ALLOC(jmp, OP_GOTO);
+	mc_3ac_JCC_ALLOC(jmp, OP_GOTO);
 	dst0 = jmp->dsts->data[0];
-	dst0->code = list_data(l, _3ac_code_t, list);
+	dst0->code = list_data(l, mc_3ac_code_t, list);
 	list_add_front(&jcc->list, &jmp->list);
 
-	_3ac_filter_jmp(h, jcc);
-	_3ac_filter_jmp(h, jmp);
+	mc_3ac_filter_jmp(h, jcc);
+	mc_3ac_filter_jmp(h, jmp);
 
 	return 0;
 }
 
-void _3ac_list_print(list_t* h)
+void mc_3ac_list_print(list_t* h)
 {
-	_3ac_code_t* c;
+	mc_3ac_code_t* c;
 	list_t*	    l;
 
 	for (l = list_head(h); l != list_sentinel(h); l = list_next(l)) {
 
-		c  = list_data(l, _3ac_code_t, list);
+		c  = list_data(l, mc_3ac_code_t, list);
 
-		_3ac_code_print(c, NULL);
+		mc_3ac_code_print(c, NULL);
 	}
 }
 
-static int _3ac_find_basic_block_start(list_t* h)
+static int mc_3ac_find_basic_block_start(list_t* h)
 {
 	int			  start = 0;
 	list_t*	  l;
 
 	for (l = list_head(h); l != list_sentinel(h); l = list_next(l)) {
 
-		_3ac_code_t* c  = list_data(l, _3ac_code_t, list);
+		mc_3ac_code_t* c  = list_data(l, mc_3ac_code_t, list);
 
 		list_t*		l2 = NULL;
-		_3ac_code_t*	c2 = NULL;
+		mc_3ac_code_t*	c2 = NULL;
 
 		if (!start) {
 			c->basic_block_start = 1;
@@ -1319,7 +1319,7 @@ static int _3ac_find_basic_block_start(list_t* h)
 
 			for (l2 = list_next(&c->list); l2 != list_sentinel(h); l2 = list_next(l2)) {
 
-				c2  = list_data(l2, _3ac_code_t, list);
+				c2  = list_data(l2, mc_3ac_code_t, list);
 
 				if (type_is_setcc(c2->op->type))
 					continue;
@@ -1336,21 +1336,21 @@ static int _3ac_find_basic_block_start(list_t* h)
 
 		if (type_is_jmp(c->op->type)) {
 
-			_3ac_operand_t* dst0 = c->dsts->data[0];
+			mc_3ac_operand_t* dst0 = c->dsts->data[0];
 
 			assert(dst0->code);
 
 			// filter 1st expr of logic op, such as '&&', '||'
 			if (OP_3AC_TEQ == dst0->code->op->type) {
 
-				int ret = _3ac_filter_dst_teq(h, c);
+				int ret = mc_3ac_filter_dst_teq(h, c);
 				if (ret < 0)
 					return ret;
 			}
 
 			for (l2 = list_prev(&c->list); l2 != list_sentinel(h); l2 = list_prev(l2)) {
 
-				c2  = list_data(l2, _3ac_code_t, list);
+				c2  = list_data(l2, mc_3ac_code_t, list);
 
 				if (type_is_setcc(c2->op->type))
 					continue;
@@ -1358,24 +1358,24 @@ static int _3ac_find_basic_block_start(list_t* h)
 				// filter 2nd expr of logic op, such as '&&', '||'
 				if (OP_3AC_TEQ == c2->op->type) {
 
-					int ret = _3ac_filter_prev_teq(h, c, c2);
+					int ret = mc_3ac_filter_prev_teq(h, c, c2);
 					if (ret < 0)
 						return ret;
 				}
 				break;
 			}
 
-			_3ac_filter_jmp(h, c);
+			mc_3ac_filter_jmp(h, c);
 		}
 	}
 #if 1
 	for (l = list_head(h); l != list_sentinel(h); ) {
 
-		_3ac_code_t*    c    = list_data(l, _3ac_code_t, list);
+		mc_3ac_code_t*    c    = list_data(l, mc_3ac_code_t, list);
 
 		list_t*        l2   = NULL;
-		_3ac_code_t*    c2   = NULL;
-		_3ac_operand_t* dst0 = NULL;
+		mc_3ac_code_t*    c2   = NULL;
+		mc_3ac_operand_t* dst0 = NULL;
 
 		if (OP_3AC_NOP == c->op->type) {
 			assert(!c->jmp_dst_flag);
@@ -1383,7 +1383,7 @@ static int _3ac_find_basic_block_start(list_t* h)
 			l = list_next(l);
 
 			list_del(&c->list);
-			_3ac_code_free(c);
+			mc_3ac_code_free(c);
 			c = NULL;
 			continue;
 		}
@@ -1396,7 +1396,7 @@ static int _3ac_find_basic_block_start(list_t* h)
 
 		for (l2 = list_next(&c->list); l2 != list_sentinel(h); ) {
 
-			c2  = list_data(l2, _3ac_code_t, list);
+			c2  = list_data(l2, mc_3ac_code_t, list);
 
 			if (c2->jmp_dst_flag)
 				break;
@@ -1404,7 +1404,7 @@ static int _3ac_find_basic_block_start(list_t* h)
 			l2 = list_next(l2);
 
 			list_del(&c2->list);
-			_3ac_code_free(c2);
+			mc_3ac_code_free(c2);
 			c2 = NULL;
 		}
 
@@ -1413,7 +1413,7 @@ static int _3ac_find_basic_block_start(list_t* h)
 
 		if (l == &dst0->code->list) {
 			list_del(&c->list);
-			_3ac_code_free(c);
+			mc_3ac_code_free(c);
 			c = NULL;
 		}
 	}
@@ -1421,14 +1421,14 @@ static int _3ac_find_basic_block_start(list_t* h)
 	return 0;
 }
 
-static int _3ac_split_basic_blocks(list_t* h, function_t* f)
+static int mc_3ac_split_basic_blocks(list_t* h, function_t* f)
 {
 	list_t*	l;
 	basic_block_t* bb = NULL;
 
 	for (l = list_head(h); l != list_sentinel(h); ) {
 
-		_3ac_code_t* c = list_data(l, _3ac_code_t, list);
+		mc_3ac_code_t* c = list_data(l, mc_3ac_code_t, list);
 
 		l = list_next(l);
 
@@ -1446,15 +1446,15 @@ static int _3ac_split_basic_blocks(list_t* h, function_t* f)
 			if (OP_3AC_CMP == c->op->type
 					|| OP_3AC_TEQ == c->op->type) {
 
-				_3ac_operand_t* src;
-				_3ac_code_t*    c2;
+				mc_3ac_operand_t* src;
+				mc_3ac_code_t*    c2;
 				list_t*	       l2;
 				node_t*        e;
 				int i;
 
 				for (l2 = list_next(&c->list); l2 != list_sentinel(h); l2 = list_next(l2)) {
 
-					c2  = list_data(l2, _3ac_code_t, list);
+					c2  = list_data(l2, mc_3ac_code_t, list);
 
 					if (type_is_setcc(c2->op->type))
 						continue;
@@ -1572,7 +1572,7 @@ static int _3ac_split_basic_blocks(list_t* h, function_t* f)
 	return 0;
 }
 
-static int _3ac_connect_basic_blocks(function_t* f)
+static int mc_3ac_connect_basic_blocks(function_t* f)
 {
 	int i;
 	int ret;
@@ -1614,9 +1614,9 @@ static int _3ac_connect_basic_blocks(function_t* f)
 	}
 
 	for (i = 0; i < f->jmps->size; i++) {
-		_3ac_code_t*    c    = f->jmps->data[i];
-		_3ac_operand_t* dst0 = c->dsts->data[0];
-		_3ac_code_t*    dst  = dst0->code;
+		mc_3ac_code_t*    c    = f->jmps->data[i];
+		mc_3ac_operand_t* dst0 = c->dsts->data[0];
+		mc_3ac_code_t*    dst  = dst0->code;
 
 		basic_block_t* current_bb = c->basic_block;
 		basic_block_t* dst_bb     = dst->basic_block;
@@ -1674,29 +1674,29 @@ static int _3ac_connect_basic_blocks(function_t* f)
 	return 0;
 }
 
-int _3ac_split_basic_blocks(list_t* list_head_3ac, function_t* f)
+int mc_3ac_split_basic_blocks(list_t* list_head_3ac, function_t* f)
 {
-	int ret = _3ac_find_basic_block_start(list_head_3ac);
+	int ret = mc_3ac_find_basic_block_start(list_head_3ac);
 	if (ret < 0)
 		return ret;
 
-	ret = _3ac_split_basic_blocks(list_head_3ac, f);
+	ret = mc_3ac_split_basic_blocks(list_head_3ac, f);
 	if (ret < 0)
 		return ret;
 
-	return _3ac_connect_basic_blocks(f);
+	return mc_3ac_connect_basic_blocks(f);
 }
 
-_3ac_code_t* _3ac_code_NN(int op_type, node_t** dsts, int nb_dsts, node_t** srcs, int nb_srcs)
+mc_3ac_code_t* mc_3ac_code_NN(int op_type, node_t** dsts, int nb_dsts, node_t** srcs, int nb_srcs)
 {
-	_3ac_operator_t* op = _3ac_find_operator(op_type);
+	mc_3ac_operator_t* op = mc_3ac_find_operator(op_type);
 	if (!op) {
 		loge("\n");
 		return NULL;
 	}
 
-	_3ac_operand_t* operand;
-	_3ac_code_t*    c;
+	mc_3ac_operand_t* operand;
+	mc_3ac_code_t*    c;
 	vector_t*      vsrc = NULL;
 	vector_t*      vdst = NULL;
 	node_t*        node;
@@ -1707,7 +1707,7 @@ _3ac_code_t* _3ac_code_NN(int op_type, node_t** dsts, int nb_dsts, node_t** srcs
 		vsrc = vector_alloc();
 		for (i = 0; i < nb_srcs; i++) {
 
-			operand = _3ac_operand_alloc();
+			operand = mc_3ac_operand_alloc();
 
 			node    = srcs[i];
 
@@ -1724,7 +1724,7 @@ _3ac_code_t* _3ac_code_NN(int op_type, node_t** dsts, int nb_dsts, node_t** srcs
 		vdst = vector_alloc();
 		for (i = 0; i < nb_dsts; i++) {
 
-			operand = _3ac_operand_alloc();
+			operand = mc_3ac_operand_alloc();
 
 			node    = dsts[i];
 
@@ -1737,7 +1737,7 @@ _3ac_code_t* _3ac_code_NN(int op_type, node_t** dsts, int nb_dsts, node_t** srcs
 		}
 	}
 
-	c       = _3ac_code_alloc();
+	c       = mc_3ac_code_alloc();
 	c->op   = op;
 	c->dsts = vdst;
 	c->srcs = vsrc;
