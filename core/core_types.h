@@ -21,7 +21,7 @@ typedef struct scope_s scope_t;// 表示作用域，保存符号表(变量、函
 typedef struct mc_3ac_code_s mc_3ac_code_t;// 表示三地址码(TAC)形式的一条或一段代码
 typedef struct inst_ops_s inst_ops_t;// 表示指令操作数。可能是寄存器、立即数、内存地址等
 typedef struct regs_ops_s regs_ops_t;// 表示寄存器操作数(专门用于寄存器分配阶段)
-typedef struct register_s register_t;// 抽象寄存器信息，可能包含编号、是否被占用、分配给那个变量等
+typedef struct mc_register_s mc_register_t;// 抽象寄存器信息，可能包含编号、是否被占用、分配给那个变量等
 typedef struct OpCode_s OpCode_t;// 表示操作码(Opcode)，比如 ADD，SUB，MUL,DIV,MOV
 
 //=================  后端扩展/硬件相关  ======================//
@@ -242,7 +242,7 @@ enum core_types{
 	// 其他
 	FUNCTION,		// 函数
 
-	STRUCT,			// 结构体
+	STRUCT,			// 结构体 133
 };
 
 /*  通过整数区间/枚举值判断某个操作或类型属于那一类  */

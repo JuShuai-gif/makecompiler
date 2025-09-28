@@ -9,8 +9,8 @@
 #include "variable.h"
 #include "operator.h"
 
-#define OP_ASSOCIATIVITY 0
-#define OP_ASSOCIATIVITY 1
+#define OP_ASSOCIATIVITY_LEFT	0
+#define OP_ASSOCIATIVITY_RIGHT	1
 
 // 抽象语法树(AST)中节点结构体定义
 struct node_s {

@@ -32,6 +32,7 @@
         "pack.h": "c",
         "ghr_elf.h": "c",
         "utils_graph.h": "c",
-        "variable.h": "c"
+        "variable.h": "c",
+        "node.h": "c"
     }
 }
