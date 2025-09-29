@@ -526,7 +526,7 @@ void mc_3ac_code_print(mc_3ac_code_t* c, list_t* sentinel)
 	printf("\n");
 }
 
-static int mc_3ac_code_to_dag(mc_3ac_code_t* c, list_t* dag, int nb_operands0, int nb_operands1)
+static int _3ac_code_to_dag(mc_3ac_code_t* c, list_t* dag, int nb_operands0, int nb_operands1)
 {
 	mc_3ac_operand_t* dst;
 	mc_3ac_operand_t* src;
@@ -854,7 +854,7 @@ int mc_3ac_code_to_dag(mc_3ac_code_t* c, list_t* dag)
 			};
 		}
 
-		return mc_3ac_code_to_dag(c, dag, n_operands0, n_operands1);
+		return _3ac_code_to_dag(c, dag, n_operands0, n_operands1);
 	}
 
 	return 0;

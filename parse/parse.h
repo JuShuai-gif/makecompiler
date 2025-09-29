@@ -7,6 +7,15 @@
 #include "utils_stack.h"
 #include "dwarf.h"
 
+/*
+parse 语法分析(parsing)
+
+它的主要作用是：
+- 接收词法分析器产生的token序列
+- 按照语法规则(文法/grammer)把这些 token 组织成语法结构，例如表达式、语句、函数、程序等
+- 生成抽象语法书(AST),为后续的语义分析、中间代码生成等阶段提供结构化的输入
+*/
+
 typedef struct parse_s parse_t;
 typedef struct dfa_data_s dfa_data_t;
 

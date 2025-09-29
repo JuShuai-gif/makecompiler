@@ -1,7 +1,7 @@
 #include "node.h"
 
 // 获取操作数
-variable_t *_operand_get(const node_t *node) {
+variable_t *_mc_operand_get(const node_t *node) {
     // 判断节点类型是否是变量类型
     if (type_is_var(node->type))
         return node->var;
@@ -12,7 +12,7 @@ variable_t *_operand_get(const node_t *node) {
 }
 
 // 获取函数节点
-function_t *_function_get(node_t *node) {
+function_t *_mc_function_get(node_t *node) {
     while (node) {
         // 先判断节点类型是否是函数
         if (FUNCTION == node->type)
@@ -24,7 +24,7 @@ function_t *_function_get(node_t *node) {
 }
 
 // 节点分配空间
-node_t *node_alloc(lex_word_t *w, int type, variable_t *var) {
+node_t *mc_node_alloc(lex_word_t *w, int type, variable_t *var) {
     // 首先分配一个节点空间
     node_t *node = calloc(1, sizeof(node_t));
     if (!node) {
@@ -64,11 +64,11 @@ node_t *node_alloc(lex_word_t *w, int type, variable_t *var) {
     return node;
 
 _failed:
-    node_free(node);
+    mc_node_free(node);
     return NULL;
 }
 
-node_t *node_clone(node_t *node) {
+node_t *mc_node_clone(node_t *node) {
     node_t *dst = calloc(1, sizeof(node_t));
     if (!dst)
         return NULL;
@@ -108,11 +108,11 @@ node_t *node_clone(node_t *node) {
     return dst;
 
 failed:
-    node_free(dst);
+    mc_node_free(dst);
     return NULL;
 }
 
-node_t *node_alloc_label(label_t *l) {
+node_t *mc_node_alloc_label(label_t *l) {
     node_t *node = calloc(1, sizeof(node_t));
     if (!node) {
         loge("node alloc failed\n");
@@ -124,7 +124,7 @@ node_t *node_alloc_label(label_t *l) {
     return node;
 }
 
-int node_add_child(node_t *parent, node_t *child) {
+int mc_node_add_child(node_t *parent, node_t *child) {
     if (!parent)
         return -EINVAL;
 
@@ -141,7 +141,7 @@ int node_add_child(node_t *parent, node_t *child) {
     return 0;
 }
 
-void node_del_child(node_t *parent, node_t *child) {
+void mc_node_del_child(node_t *parent, node_t *child) {
     if (!parent)
         return;
 
@@ -157,7 +157,7 @@ void node_del_child(node_t *parent, node_t *child) {
     parent->nodes[--parent->nb_nodes] = NULL;
 }
 
-void node_free_data(node_t *node) {
+void mc_node_free_data(node_t *node) {
     if (!node)
         return;
 
@@ -168,7 +168,7 @@ void node_free_data(node_t *node) {
         }
     } else if (LABEL == node->type) {
         if (node->label) {
-            label_free(node->label);
+            mc_label_free(node->label);
             node->label = NULL;
         }
     } else {
@@ -189,14 +189,14 @@ void node_free_data(node_t *node) {
     }
 
     if (node->result_nodes) {
-        vector_clear(node->result_nodes, (void (*)(void *))node_free);
+        vector_clear(node->result_nodes, (void (*)(void *))mc_node_free);
         vector_free(node->result_nodes);
     }
 
     int i;
     for (i = 0; i < node->nb_nodes; i++) {
         if (node->nodes[i]) {
-            node_free(node->nodes[i]);
+            mc_node_free(node->nodes[i]);
             node->nodes[i] = NULL;
         }
     }
@@ -208,7 +208,7 @@ void node_free_data(node_t *node) {
     }
 }
 
-void node_move_data(node_t *dst, node_t *src) {
+void mc_node_move_data(node_t *dst, node_t *src) {
     dst->type = src->type;
     dst->nb_nodes = src->nb_nodes;
     dst->nodes = src->nodes;
@@ -256,11 +256,11 @@ void node_move_data(node_t *dst, node_t *src) {
     src->result_nodes = NULL;
 }
 
-void node_free(node_t *node) {
+void mc_node_free(node_t *node) {
     if (!node)
         return;
 
-    node_free_data(node);
+    mc_node_free_data(node);
 
     node->parent = NULL;
 
@@ -268,7 +268,7 @@ void node_free(node_t *node) {
     node = NULL;
 }
 
-void node_print(node_t *node) {
+void mc_node_print(node_t *node) {
     if (node) {
         logw("node: %p, type: %d", node, node->type);
 
@@ -288,7 +288,7 @@ void node_print(node_t *node) {
 }
 
 // BFS search
-int node_search_bfs(node_t *root, void *arg, vector_t *results, int max, node_find_pt find) {
+int mc_node_search_bfs(node_t *root, void *arg, vector_t *results, int max, mc_node_find_pt find) {
     if (!root || !results || !find)
         return -EINVAL;
 

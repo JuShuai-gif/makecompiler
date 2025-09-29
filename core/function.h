@@ -54,7 +54,7 @@ struct function_s
 
     Efunction* ef;// 外部函数扩展信息（例如目标代码生成时使用）
 
-    _3ac_code_t* init_code;// 初始化的三地址码 (Three-Address Code)
+    mc_3ac_code_t* init_code;// 初始化的三地址码 (Three-Address Code)
     int init_code_bytes;// 初始化三地址码占用的字节数
 
     int callee_saved_size; // 被调用者保存寄存器占用的栈大小

@@ -59,34 +59,34 @@ struct label_s {
 };
 
 // 分配节点
-node_t *ghr_node_alloc(lex_word_t *w, int type, variable_t *var);
+node_t *mc_node_alloc(lex_word_t *w, int type, variable_t *var);
 // 分配标签节点
-node_t *ghr_node_alloc_label(label_t *l);
+node_t *mc_node_alloc_label(label_t *l);
 // 节点克隆
-node_t *ghr_node_clone(node_t *node);
+node_t *mc_node_clone(node_t *node);
 // 节点增加孩子
-int ghr_node_add_child(node_t *parent, node_t *child);
+int mc_node_add_child(node_t *parent, node_t *child);
 // 节点删除孩子
-void ghr_node_del_child(node_t *parent, node_t *child);
+void mc_node_del_child(node_t *parent, node_t *child);
 // 节点释放
-void ghr_node_free(node_t *node);
+void mc_node_free(node_t *node);
 // 节点释放数据
-void ghr_node_free_data(node_t *node);
+void mc_node_free_data(node_t *node);
 // 节点移动数据
-void ghr_node_move_data(node_t *dst, node_t *src);
+void mc_node_move_data(node_t *dst, node_t *src);
 // 节点打印
-void ghr_node_print(node_t *node);
+void mc_node_print(node_t *node);
 // 节点操作数获取
-variable_t *_ghr_operand_get(const node_t *node);
+variable_t *_mc_operand_get(const node_t *node);
 // 节点函数获取
-function_t *_ghr_function_get(node_t *node);
+function_t *_mc_function_get(node_t *node);
 //
-typedef int (*ghr_node_find_pt)(node_t *node, void *arg, vector_t *results);
+typedef int (*mc_node_find_pt)(node_t *node, void *arg, vector_t *results);
 // 宽度优先搜索
-int ghr_node_search_bfs(node_t *root, void *arg, vector_t *results, int max, ghr_node_find_pt find);
+int mc_node_search_bfs(node_t *root, void *arg, vector_t *results, int max, mc_node_find_pt find);
 // 标签分配
-label_t *ghr_label_alloc(lex_word_t *w);
+label_t *mc_label_alloc(lex_word_t *w);
 // 标签释放
-void ghr_label_free(label_t *l);
+void mc_label_free(label_t *l);
 
 #endif

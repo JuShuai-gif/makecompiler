@@ -23,7 +23,7 @@ scope_t *scope_alloc(lex_word_t *w, const char *name) {
         return NULL;
     }
 
-    // 如果词元存在
+    // 域内的词元
     if (w) {
         scope->w = lex_word_clone(w);
 

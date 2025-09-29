@@ -9,47 +9,85 @@
 #include "leb128.h"
 #include "eda.h"
 
-#define ADD_SECTION_SYMBOL(sh_index, sh_name)                                                             \
-    do {                                                                                                  \
-        int ret = _parse_add_sym(parse, sh_name, 0, 0, sh_index, ELF64_ST_INFO(STB_LOCAL, STT_SECTION));  \
-        if (ret < 0) {                                                                                    \
-            loge("\n");                                                                                   \
-            return ret;                                                                                   \
-        }                                                                                                 \
+/*
+ * 调用内部函数 _parse_add_sym 添加一个符号
+ * 参数说明：
+ * - parse         : 当前解析器上下文
+ * - sh_name       : 段名 (如 ".text", ".data")
+ * - 0, 0          : 符号的值 (st_value) 和大小 (st_size)，这里传 0，表示段符号没有具体值和大小
+ * - sh_index      : 段索引 (section index)，比如 SHNDX_TEXT、SHNDX_DATA
+ * - ELF64_ST_INFO : 构造 ELF64 的符号信息 (st_info)，这里指定绑定和类型：
+ *       STB_LOCAL   : 本地符号（只在本目标文件可见）
+ *       STT_SECTION : 符号类型是 "段符号" (section)
+ *
+ * 返回值 ret：如果成功，返回 >= 0；如果失败，返回 < 0。
+ */
+#define ADD_SECTION_SYMBOL(sh_index, sh_name)                                                            \
+    do {                                                                                                 \
+        int ret = _parse_add_sym(parse, sh_name, 0, 0, sh_index, ELF64_ST_INFO(STB_LOCAL, STT_SECTION)); \
+        if (ret < 0) {                                                                                   \
+            loge("\n");                                                                                  \
+            return ret;                                                                                  \
+        }                                                                                                \
     } while (0)
 
+// 在编译器的 语法分析 / 语义分析 阶段，用来 识别、匹配、存储 C 语言及扩展类型的元信息
+/*
+它的主要用途有:
+1. 类型关键字识别
+    当语法分析器遇到int\float\uint64_t\funcptr等关键字时，可以在base_types 
+    里查到对应的 内部枚举值 (VAR_INT, VAR_FLOAT …)，从而建立 AST 节点。
+
+2. 类型大小计算
+    编译器需要知道每种类型的 字节大小，用于：
+        - 变量分配（符号表里的变量大小）
+        - 表达式计算时的类型提升
+        - 结构体、数组的内存布局
+        - 生成汇编代码时的偏移量计算
+
+3. 类型检查
+    - 检查不同类型是否能合法赋值 (int32_t → double 等)
+    - 函数调用时的参数匹配
+    - 指针和整数类型的兼容性检查
+
+4. 代码生成
+    在生成中间代码或目标代码时，需要用到 类型大小，比如：
+        - int a[10]; → 分配 4 * 10 = 40 字节
+        - sizeof(uint64_t) → 结果是 8
+
+*/
 base_type_t base_types[] =
-    {
-        {VAR_CHAR, "char", 1},
+{
+    {VAR_CHAR, "char", 1},     // char 类型，占 1 字节
 
-        {VAR_VOID, "void", 1},
-        {VAR_BIT, "bit", 1},
-        {VAR_U2, "bit2_t", 1},
-        {VAR_U3, "bit3_t", 1},
-        {VAR_U4, "bit4_t", 1},
+    {VAR_VOID, "void", 1},     // void 类型（占位，通常大小 = 1）
+    {VAR_BIT, "bit", 1},       // 自定义 bit 类型，占 1 字节
+    {VAR_U2, "bit2_t", 1},     // 自定义 2 位整数类型
+    {VAR_U3, "bit3_t", 1},     // 自定义 3 位整数类型
+    {VAR_U4, "bit4_t", 1},     // 自定义 4 位整数类型
 
-        {VAR_I1, "int1_t", 1},
-        {VAR_I2, "int2_t", 1},
-        {VAR_I3, "int3_t", 1},
-        {VAR_I4, "int4_t", 1},
+    {VAR_I1, "int1_t", 1},     // 1 字节整数（别名）
+    {VAR_I2, "int2_t", 1},     // 2 位整数（自定义扩展）
+    {VAR_I3, "int3_t", 1},     // 3 位整数（自定义扩展）
+    {VAR_I4, "int4_t", 1},     // 4 位整数（自定义扩展）
 
-        {VAR_INT, "int", 4},
-        {VAR_FLOAT, "float", 4},
-        {VAR_DOUBLE, "double", 8},
+    {VAR_INT, "int", 4},       // int 占 4 字节
+    {VAR_FLOAT, "float", 4},   // float 占 4 字节
+    {VAR_DOUBLE, "double", 8}, // double 占 8 字节
 
-        {VAR_I8, "int8_t", 1},
-        {VAR_I16, "int16_t", 2},
-        {VAR_I32, "int32_t", 4},
-        {VAR_I64, "int64_t", 8},
+    {VAR_I8, "int8_t", 1},     // 8 位整数
+    {VAR_I16, "int16_t", 2},   // 16 位整数
+    {VAR_I32, "int32_t", 4},   // 32 位整数
+    {VAR_I64, "int64_t", 8},   // 64 位整数
 
-        {VAR_U8, "uint8_t", 1},
-        {VAR_U16, "uint16_t", 2},
-        {VAR_U32, "uint32_t", 4},
-        {VAR_U64, "uint64_t", 8},
+    {VAR_U8, "uint8_t", 1},    // 无符号 8 位整数
+    {VAR_U16, "uint16_t", 2},  // 无符号 16 位整数
+    {VAR_U32, "uint32_t", 4},  // 无符号 32 位整数
+    {VAR_U64, "uint64_t", 8},  // 无符号 64 位整数
 
-        {VAR_INTPTR, "intptr_t", sizeof(void *)},
-        {VAR_UINTPTR, "uintptr_t", sizeof(void *)},
-        {FUNCTION_PTR, "funcptr", sizeof(void *)},
+    {VAR_INTPTR, "intptr_t", sizeof(void *)},   // 指针大小的有符号整数
+    {VAR_UINTPTR, "uintptr_t", sizeof(void *)}, // 指针大小的无符号整数
+    {FUNCTION_PTR, "funcptr", sizeof(void *)},  // 函数指针，大小与指针相同
 };
 
 // 打开解析器
@@ -62,13 +100,14 @@ int parse_open(parse_t **pparse) {
     if (!parse)
         return -EINVAL;
 
-    // 
+    // 创建一个 ast(抽象语法树)
     if (ast_open(&parse->ast) < 0) {
         loge("\n");
         return -1;
     }
 
     int i;
+    // 将所有的 基本类型 都存入抽象语法树
     for (i = 0; i < sizeof(base_types) / sizeof(base_types[0]); i++) {
         ast_add_base_type(parse->ast, &base_types[i]);
     }
@@ -120,8 +159,8 @@ static int _find_sym(const void *v0, const void *v1) {
 }
 
 static int _parse_add_sym(parse_t *parse, const char *name,
-                           uint64_t st_size, Elf64_Addr st_value,
-                           uint16_t st_shndx, uint8_t st_info) {
+                          uint64_t st_size, Elf64_Addr st_value,
+                          uint16_t st_shndx, uint8_t st_info) {
     elf_sym_t *sym = NULL;
     elf_sym_t *sym2 = NULL;
 
@@ -159,6 +198,7 @@ static int _parse_add_sym(parse_t *parse, const char *name,
     return 0;
 }
 
+// 语法分析文件
 int parse_file(parse_t *parse, const char *path) {
     if (!parse || !path)
         return -EINVAL;
@@ -915,7 +955,7 @@ static int _fill_code_list_inst(string_t *code, list_t *h, int64_t offset, parse
         }
 
         if (c->dsts) {
-            _3ac_operand_t * dst;
+            _3ac_operand_t *dst;
 
             for (i = 0; i < c->dsts->size; i++) {
                 dst = c->dsts->data[i];
@@ -939,7 +979,7 @@ static int _fill_code_list_inst(string_t *code, list_t *h, int64_t offset, parse
         }
 
         if (c->srcs) {
-            _3ac_operand_t * src;
+            _3ac_operand_t *src;
 
             for (i = 0; i < c->srcs->size; i++) {
                 src = c->srcs->data[i];

@@ -1,6 +1,6 @@
 #include "node.h"
 
-label_t* label_alloc(lex_word_t* w){
+label_t* mc_label_alloc(lex_word_t* w){
     label_t* l = calloc(1,sizeof(label_t));
     if (!l)
         return NULL;
@@ -18,7 +18,7 @@ label_t* label_alloc(lex_word_t* w){
     
 }
 
-void label_free(label_t* l){
+void mc_label_free(label_t* l){
     if (1)
     {
         if (--l->refs > 0)

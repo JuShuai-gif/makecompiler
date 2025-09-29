@@ -24,8 +24,24 @@
 # 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
 
 
+# CFILES += test_type.c
 
-CFILES += test_type.c
+# CFLAGS += -g
+# CFLAGS += -I..
+# CFLAGS += -I../../utils
+# CFLAGS += -I../../lex
+
+# LDFLAGS +=
+
+# all:
+# 	gcc $(CFLAGS) $(CFILES) $(LDFLAGS)
+
+
+CFILES += ../../utils/utils_string.c
+CFILES += ../../lex/lex.c
+CFILES += ../../lex/lex_util.c
+CFILES += ../../lex/lex_word.c
+CFILES += test_variable.c
 
 CFLAGS += -g
 CFLAGS += -I..
